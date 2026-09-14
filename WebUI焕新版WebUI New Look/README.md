@@ -24,9 +24,7 @@ git clone https://github.com/d1irgger/CS2-CFG-view.git
 cd "CS2-CFG-view/WebUI焕新版WebUI New Look"
 pip install pywebview
 python cs2cfgviewernew.py
-选择 Steam 目录，或直接导入 / 下载 autoexec，即可查看。
-打包成单文件（可选）
-Bashpy -m PyInstaller --onefile --windowed --name "CS2CfgViewer" --add-data "web;web" --collect-all webview cs2cfgviewernew.py
+选择 Steam 目录，或访问[proseting](https://prosettings.net/games/cs2/)搜索ID直接/ 下载 autoexec，即可查看职业哥同款设定。
 
 📂 目录结构
 textWebUI焕新版WebUI New Look/
