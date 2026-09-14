@@ -51,7 +51,7 @@ APP_NAME    = "CS2 CFG Viewer"
 APP_VERSION = "3.0.0"
 APP_AUTHOR  = "D1r3ctor"
 
-GITHUB_URL   = "https://github.com/d1irgger/CS2CFGView"
+GITHUB_URL   = "https://github.com/d1irgger/CS2-CFG-view"
 TELEGRAM_URL = "https://t.me/timharrys"
 
 STEAM_PLACEHOLDER = "选择 Steam 目录，或用 ProSettings 下载解析 autoexec"
