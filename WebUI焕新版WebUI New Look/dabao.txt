@@ -1,0 +1,3 @@
+cd D:\python\CS2CFGVN
+
+py -m PyInstaller --onefile --windowed --name "CS2CfgViewer" --add-data "web;web" --collect-all webview cs2cfgviewernew.py
