@@ -28,7 +28,7 @@ APP_VERSION = "2.1.0"
 APP_AUTHOR  = "D1r3ctor"
 
 GITHUB_TEXT   = "Github"
-GITHUB_URL    = "https://github.com/d1irgger/CS2CFGView"
+GITHUB_URL    = "https://github.com/d1irgger/CS2-CFG-view"
 TELEGRAM_TEXT = "Telegram"
 TELEGRAM_URL  = "https://t.me/timharrys"
 
