@@ -1,0 +1,3 @@
+py -m pip install pyinstaller -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+py -m PyInstaller --onefile --windowed --name "CS2CfgViewer" cs2_cfg_viewer.py
