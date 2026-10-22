@@ -5,7 +5,20 @@
 一款专为 **Counter-Strike 2** 打造的 **CFG / VCFG 可视化解析器**。支持按键绑定、控制台命令、视频设置的智能中文翻译，让你快速理解自己（或别人）的配置。
 
 [![Version](https://img.shields.io/badge/version-4.1.0-6aa0ff)](https://github.com/d1irgger/CS2-CFG-view)
+[![Online](https://img.shields.io/badge/🌐_在线使用-d1irgger.github.io/CS2--CFG--view-a98bff)](https://d1irgger.github.io/CS2-CFG-view/)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
+
+---
+
+## 🌐 在线使用（推荐）
+
+**无需下载、无需安装，打开浏览器即可使用：**
+
+### 👉 **[https://d1irgger.github.io/CS2-CFG-view/](https://d1irgger.github.io/CS2-CFG-view/)**
+
+推荐使用 **Chrome / Edge**。打开后点击「📁 选择 Steam / userdata 目录」或「📄 导入 autoexec.cfg」即可开始。
+
+> 💡 **提示**：直接选 `Steam/userdata` 目录比选 Steam 根目录快很多。浏览器会请求读取你选择的目录，数据全部在本地处理，**不会上传到任何服务器**。
 
 ---
 
@@ -27,81 +40,32 @@ CS2 的配置以纯文本形式存放在以下位置：
 
 ---
 
-## 🚀 三种版本，任选其一
+## ✨ 功能一览
 
-仓库包含三个独立版本，功能相似，部署方式不同：
+### 网页版（v4.1.0）
 
-| 版本 | 位置 | 适合谁 |
-|---|---|---|
-| **网页新版**（推荐） | `网页新版New Web Version/` | 零安装、双击即用、跨平台 |
-| **WebUI 焕新版** | `WebUI焕新版WebUI New Look/` | 想要桌面窗口和系统文件对话框 |
-| **原生 UI 版本** | `原生UI版本Native UI version/` | 只有 Python、不想装第三方依赖 |
+- **🧠 官方描述增强翻译**：内置约 150 条高频命令中文描述，打开即显示；其余项调用 CS2 官方英文描述作为上下文，机翻准确度显著提升。
+- **📥 cvarlist.md 导入**：一键导入社区维护的 CS2 命令列表，把英文描述库扩展到 4000+ 条。
+- **📂 三种数据源**：Steam `userdata` 目录扫描 / 手动加载 `.vcfg` 文件 / 导入 `autoexec.cfg`。
+- **👥 多账户支持**：自动识别同一 Steam 下的多个账户，下拉框切换，路径栏同步显示当前选中账户。
+- **🔍 实时搜索**：按键、命令、设置项、官方英文描述均可即时过滤。
+- **🌐 可选联网翻译**：随时启动 / 停止，进度可见，失败条目自动重试。
+- **🪟 液态玻璃风格**：CS2 官方图标，轻量、干净、聚焦内容。
 
-### 版本对比
+### 桌面版
 
-| 特性 | 网页新版 v4.1.0 | WebUI 焕新版 | 原生 UI 版本 |
-|---|---|---|---|
-| 安装步骤 | 双击 HTML | 需装 pywebview | 需装 Python |
-| Steam 路径自动探测 | ❌ 手动选择 | ✅ | ✅ |
-| 官方描述增强翻译 | ✅ | ❌ | ❌ |
-| cvarlist.md 导入 | ✅ | ❌ | ❌ |
-| 液态玻璃 UI | ✅ | ✅ | ❌ |
-| 联网翻译 | ✅ | ✅ | ✅ |
+- **🖥️ 系统文件对话框**：像本地应用一样选择文件。
+- **🔍 注册表读取 Steam 路径**：自动定位 Steam 安装目录。
 
 ---
 
-## 📂 仓库结构
+## 🧠 翻译机制
 
-```
-CS2-CFG-view/
-├── README.md                              # 本文件
-│
-├── 网页新版New Web Version/                # ⭐ 推荐
-│   ├── cs2cfgviewer.html                  # 单文件应用（双击即用）
-│   └── README.md                          # 该版本的详细说明
-│
-├── WebUI焕新版WebUI New Look/
-│   └── cs2cfgviewernew.py                 # PyWebView 版本
-│
-└── 原生UI版本Native UI version/
-    └── cs2_cfg_viewer.py                  # Tkinter 版本
-```
-
----
-
-## ⚡ 快速开始
-
-### 网页新版（推荐）跟随CS2最新版本更新
-
-1. 下载 `网页新版New Web Version/cs2cfgviewer.html`
-2. 用 Chrome / Edge 双击打开
-3. 点击「📁 选择 Steam / userdata 目录」或「📄 导入 autoexec.cfg」
-4. 开始浏览、搜索、翻译
-
-详见 [网页新版说明](网页新版New%20Web%20Version/README.md)
-
-### WebUI 焕新版
-
-```bash
-pip install pywebview
-python "WebUI焕新版WebUI New Look/cs2cfgviewernew.py"
-```
-
-### 原生 UI 版本
-
-```bash
-python "原生UI版本Native UI version/cs2_cfg_viewer.py"
-```
-
----
-
-## 🧠 翻译机制（通用）
-
-三个版本共享同一套翻译逻辑：
+三种使用方式共享同一套翻译逻辑：
 
 1. **本地字典**：内置常用按键、命令、设置项的中英对照。
 2. **联网翻译**：本地未命中的条目，调用 [MyMemory Translation API](https://mymemory.translated.net/) 英译中。
-3. **描述增强**（仅网页新版）：调用官方 ConVar 英文描述作为翻译上下文，显著提升机翻准确度。
+3. **描述增强**（仅网页版）：调用官方 ConVar 英文描述作为翻译上下文，显著提升机翻准确度。
 
 ---
 
@@ -116,11 +80,19 @@ python "原生UI版本Native UI version/cs2_cfg_viewer.py"
 
 ---
 
+## 🔒 隐私说明
+
+- 所有配置文件解析、翻译查询都在**浏览器本地**完成。
+- 只有点击「🌐 开始联网翻译」时，会把**待翻译的命令名/描述文本**发送给 MyMemory API。
+- 不会上传你的配置文件、Steam ID 或任何个人信息。
+
+---
+
 ## ⚠️ 已知限制
 
-- **Steam 路径自动探测**：仅 WebUI 焕新版和原生 UI 版本支持；网页新版需手动选择目录。
+- **Steam 路径自动探测**：仅 Python 桌面版支持；网页版需手动选择目录。
 - **MyMemory 免费额度**：匿名用户约 5000 字符/天，超出后请求会被跳过。
-- **Firefox 目录选择**：Firefox 不支持目录选择功能，网页新版请改用「手动加载配置文件」或换用 Chrome / Edge。
+- **Firefox 目录选择**：Firefox 不支持目录选择功能，网页版请改用「手动加载配置文件」或换用 Chrome / Edge。
 
 ---
 
