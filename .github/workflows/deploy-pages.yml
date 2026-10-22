@@ -35,8 +35,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # 指定要发布的文件夹路径。这里设为根目录，它会自动上传所有内容
-          path: '.'
+          # 👇 指向包含 index.html 的文件夹
+          path: '网页新版New Web Version'
 
       - name: Deploy to GitHub Pages
         id: deployment
