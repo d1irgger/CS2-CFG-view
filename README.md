@@ -1,43 +1,140 @@
-# 🎮 CS2 CFG Viewer
+# CS2 CFG Viewer
 
 > 把复杂的 CS2 配置文件，变成一眼能读懂的中文界面。
 
-一款专为 Counter-Strike 2 打造的 **CFG / VCFG 可视化解析器**。  
-支持按键绑定、命令、视频设置的智能中文翻译，让你秒懂自己（或别人）的配置。
+一款专为 **Counter-Strike 2** 打造的 **CFG / VCFG 可视化解析器**。支持按键绑定、控制台命令、视频设置的智能中文翻译，让你快速理解自己（或别人）的配置。
+
+[![Version](https://img.shields.io/badge/version-4.1.0-6aa0ff)](https://github.com/d1irgger/CS2-CFG-view)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
 ---
 
-## ✨ 核心亮点
+## 📌 这是什么
 
-- **智能中文翻译** — 按键、命令、设置项全部本地字典优先，未命中才可选机翻
-- **多格式支持** — `.vcfg` / `.txt` / `autoexec.cfg` 全兼容
-- **Steam 目录一键扫描** — 自动识别多账户配置
-- **ProSettings 联动** — 直接下载并解析职业选手 autoexec
-- **双版本可选**
-  - **WebUI 焕新版**（推荐）— 白色液态玻璃风格，PyWebView 驱动
-  - **原生 UI 版** — 纯 Tkinter，零额外依赖
+CS2 的配置以纯文本形式存放在以下位置：
+
+- **个人配置**：`Steam/userdata/<SteamID>/730/local/cfg/`
+- **全局配置**：`游戏安装目录/game/csgo/cfg/`
+- **常用文件**：`machine_convars.vcfg`、`user_convars.vcfg`、`user_keys.vcfg`、`video.txt`
+
+这些文件内部是大量形如 `bind "key" "+command"` 和 `setting.cl_crosshaircolor 1` 的键值对。对不熟悉 CS2 命令的人来说，读起来像天书。
+
+**CS2 CFG Viewer** 就是把这些"天书"翻译成中文的桥梁：
+
+- 把 `bind "kp_ins" "+jump"` 显示为「小键盘 0 → 跳跃」
+- 把 `cl_crosshaircolor 4` 显示为「准星颜色 → 青」
+- 把 `setting.r_low_latency 2` 显示为「低延迟模式 → 超低延迟」
 
 ---
 
-## 🚀 快速开始
+## 🚀 三种版本，任选其一
 
-### WebUI 焕新版（推荐）
+仓库包含三个独立版本，功能相似，部署方式不同：
+
+| 版本 | 位置 | 技术栈 | 适合谁 |
+|---|---|---|---|
+| **网页新版**（推荐） | `网页新版New Web Version/` | 单文件 HTML | 零安装、双击即用、跨平台 |
+| **WebUI 焕新版** | `WebUI焕新版WebUI New Look/` | PyWebView | 想要桌面窗口和系统文件对话框 |
+| **原生 UI 版本** | `原生UI版本Native UI version/` | Tkinter | 只有 Python、不想装第三方依赖 |
+
+### 版本对比
+
+| 特性 | 网页新版 v4.1.0 | WebUI 焕新版 | 原生 UI 版本 |
+|---|---|---|---|
+| 安装步骤 | 双击 HTML | 需装 pywebview | 需装 Python |
+| Steam 路径自动探测 | ❌ 手动选择 | ✅ 注册表读取 | ✅ 注册表读取 |
+| 多编码回退 | ✅ | ✅ | ✅ |
+| 官方描述增强翻译 | ✅ | ❌ | ❌ |
+| cvarlist.md 导入 | ✅ | ❌ | ❌ |
+| 液态玻璃 UI | ✅ | ✅ | ❌ |
+| 联网翻译 | ✅ MyMemory | ✅ MyMemory | ✅ MyMemory |
+
+---
+
+## 📂 仓库结构
+
+```
+CS2-CFG-view/
+├── README.md                              # 本文件
+│
+├── 网页新版New Web Version/                # ⭐ 推荐
+│   ├── cs2cfgviewer.html                  # 单文件应用（双击即用）
+│   └── README.md                          # 该版本的详细说明
+│
+├── WebUI焕新版WebUI New Look/
+│   └── cs2cfgviewernew.py                 # PyWebView 版本
+│
+└── 原生UI版本Native UI version/
+    └── cs2_cfg_viewer.py                  # Tkinter 版本
+```
+
+---
+
+## ⚡ 快速开始
+
+### 网页新版（推荐）
+
+1. 下载 `网页新版New Web Version/cs2cfgviewer.html`
+2. 用 Chrome / Edge 双击打开
+3. 点击「📁 选择 Steam / userdata 目录」或「📄 导入 autoexec.cfg」
+4. 开始浏览、搜索、翻译
+
+详见 [网页新版说明](网页新版New%20Web%20Version/README.md)
+
+### WebUI 焕新版
 
 ```bash
-git clone https://github.com/d1irgger/CS2-CFG-view.git
-cd "CS2-CFG-view/WebUI焕新版WebUI New Look"
 pip install pywebview
-python cs2cfgviewernew.py
-原生 UI 版
-Bashcd "CS2-CFG-view/原生UI版本Native UI version"
-python cs2_cfg_viewer.py
-选择 Steam 目录，或直接拖入 / 下载 autoexec，即可开始探索。
+python "WebUI焕新版WebUI New Look/cs2cfgviewernew.py"
+```
 
-🛠️ 技术栈
-Python 3.10+ · PyWebView / Tkinter · 本地词典 + 可选机翻
+### 原生 UI 版本
 
-📬 反馈
-由 @d1irgger 设计开发。
+```bash
+python "原生UI版本Native UI version/cs2_cfg_viewer.py"
+```
 
-欢迎 Issue / PR。
-如果觉得好用，给一颗 Star — 这是最大的鼓励。
+---
+
+## 🧠 翻译机制（通用）
+
+三个版本共享同一套翻译逻辑：
+
+1. **本地字典**：内置 `KEY_NAME_CN`、`CMD_NAME_CN`、`VIDEO_NAME_CN`、`VIDEO_VALUE_CN` 四本字典，覆盖常用按键、命令、设置项。
+2. **联网翻译**：本地未命中的条目，调用 [MyMemory Translation API](https://mymemory.translated.net/) 英译中。
+3. **描述增强**（仅网页新版 v4.1.0+）：调用官方 ConVar 英文描述作为翻译上下文，显著提升机翻准确度。
+
+---
+
+## 📚 数据来源
+
+官方英文描述来自社区维护的 CS2 ConVar 列表：
+
+- [SuGolYolLom/CS2-Cvars-Cmds](https://github.com/SuGolYolLom/CS2-Cvars-Cmds)
+- [ArmynC/ArminC-CS2-Cvars](https://github.com/ArmynC/ArminC-CS2-Cvars)
+
+> Valve 没有提供公开的 CS2 ConVar 中文官方文档，因此翻译层完全依赖本地字典 + 社区数据 + MyMemory 的组合。
+
+---
+
+## ⚠️ 已知限制
+
+- **Steam 路径自动探测**：仅 WebUI 焕新版和原生 UI 版本支持（Python 可读注册表）；网页新版需手动选择目录。
+- **MyMemory 免费额度**：匿名用户约 5000 字符/天，超出后请求返回 `MYMEMORY WARNING`，代码会静默跳过。
+- **Firefox 目录选择**：Firefox 不支持 `webkitdirectory`，网页新版用户请改用「手动加载配置文件」或换用 Chrome / Edge。
+
+---
+
+## 🤝 反馈与贡献
+
+- **Issue / PR**：[GitHub Issues](https://github.com/d1irgger/CS2-CFG-view/issues)
+- **作者**：[@d1irgger](https://github.com/d1irgger)
+- **Telegram**：[@timharrys](https://t.me/timharrys)
+
+如果这个工具帮你省下了翻配置的时间，给一颗 ⭐ Star 就是最大的鼓励。
+
+---
+
+## 📄 许可
+
+MIT License
