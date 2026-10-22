@@ -68,50 +68,6 @@
 
 ---
 
-## 自定义
-
-### 添加新的中文描述
-
-打开 `cs2cfgviewer.html`，搜索 `CONVAR_DESC_CN`，在对象中追加键值：
-
-```js
-const CONVAR_DESC_CN = {
-  // ... 已有
-  "your_new_convar": "你的中文描述",
-};
-```
-
-命中后该条目**不会**进入联网翻译队列。
-
-### 添加新的官方英文描述
-
-搜索 `CONVAR_DESC_EN`，同样追加：
-
-```js
-const CONVAR_DESC_EN = {
-  // ... 已有
-  "your_new_convar": "Official English description",
-};
-```
-
-### 修改 UI 主题
-
-所有颜色在 CSS `:root` 中定义：
-
-```css
-:root {
-  --ink: #1a1d29;        /* 主文字色 */
-  --ink2: #4a4f5c;       /* 次要文字色 */
-  --glass: rgba(255,255,255,.58);  /* 玻璃背景 */
-  --accent: #6aa0ff;     /* 主按钮渐变起始色 */
-  --accent2: #a98bff;    /* 主按钮渐变结束色 */
-}
-```
-
-修改这些变量即可整体换色，无需改动任何组件样式。
-
----
-
 ## 版本历史
 
 | 版本 | 变化 |
