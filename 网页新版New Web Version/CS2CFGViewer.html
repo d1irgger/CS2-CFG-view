@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CS2 CFG Viewer v4.1.0</title>
+<style>
+:root{--ink:#1a1d29;--ink2:#4a4f5c;--ink3:#7a7f8c;--glass:rgba(255,255,255,.58);--glass2:rgba(255,255,255,.72);--border:rgba(255,255,255,.75)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;color:var(--ink);background:linear-gradient(135deg,#e6ecf7 0%,#f2eefb 45%,#fbeaf2 100%);min-height:100vh;overflow:hidden;position:relative;user-select:none}
+body::before,body::after{content:"";position:fixed;border-radius:50%;pointer-events:none;filter:blur(80px);z-index:0}
+body::before{top:-15vh;left:-12vw;width:55vw;height:55vh;background:radial-gradient(circle,rgba(120,170,255,.45),transparent 70%)}
+body::after{bottom:-20vh;right:-12vw;width:55vw;height:55vh;background:radial-gradient(circle,rgba(255,150,220,.42),transparent 70%)}
+.app{position:relative;z-index:1;height:100vh;padding:14px;display:grid;grid-template-rows:auto auto 1fr auto;gap:12px;max-width:1440px;margin:0 auto}
+.glass{background:var(--glass);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 40px rgba(31,38,135,.08),inset 0 1px 0 rgba(255,255,255,.7)}
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{width:34px;height:34px;border-radius:8px;background:url('https://developer.valvesoftware.com/w/images/5/52/Cs2_icon.png') center/cover no-repeat;box-shadow:0 4px 12px rgba(31,38,135,.2);flex-shrink:0}
+.brand h1{font-size:15px;font-weight:700;margin:0}
+.brand .ver{font-size:11px;color:var(--ink3);margin-left:6px;font-weight:500}
+.header .links{display:flex;gap:8px}
+.header .links a{font-size:12px;text-decoration:none;color:var(--ink2);padding:6px 12px;border-radius:10px;background:var(--glass);border:1px solid var(--border);transition:all .18s}
+.header .links a:hover{background:rgba(255,255,255,.9);color:var(--ink)}
+.toolbar{padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.path-display{flex:1;min-width:220px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.9);color:var(--ink2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.path-display.placeholder{color:#9aa0ad;font-style:italic}
+button,select{font-family:inherit;font-size:12px;padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.9);background:var(--glass2);color:var(--ink);cursor:pointer;transition:all .15s;font-weight:500;white-space:nowrap}
+button:hover{background:rgba(255,255,255,.95);transform:translateY(-1px);box-shadow:0 4px 12px rgba(31,38,135,.1)}
+button:active{transform:translateY(0)}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+button.primary{background:linear-gradient(135deg,#6aa0ff,#a98bff);color:#fff;border-color:rgba(255,255,255,.6)}
+button.primary:hover{background:linear-gradient(135deg,#5f96ff,#9c7cff)}
+button.danger{background:linear-gradient(135deg,#ff7a9c,#ff5f7e);color:#fff;border-color:rgba(255,255,255,.6)}
+button.danger:hover{background:linear-gradient(135deg,#ff6b8e,#ff4a6d)}
+select{padding-right:30px;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#6b7080 50%),linear-gradient(135deg,#6b7080 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+select option{color:var(--ink);background:#fff}
+.content{display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.tabs{display:flex;align-items:center;gap:4px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.6);flex-shrink:0}
+.tabs button{padding:7px 14px;border-radius:9px;background:transparent;border:1px solid transparent;color:var(--ink3);font-weight:500}
+.tabs button:hover{background:rgba(255,255,255,.6);transform:none;box-shadow:none}
+.tabs button.active{background:rgba(255,255,255,.92);color:var(--ink);border-color:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(31,38,135,.08);font-weight:600}
+.tabs .search{margin-left:auto;padding:7px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.9);background:var(--glass2);font-size:12px;width:260px;font-family:inherit;outline:none;transition:all .15s}
+.tabs .search:focus{background:rgba(255,255,255,.98);border-color:rgba(140,150,255,.5);box-shadow:0 0 0 3px rgba(140,150,255,.15)}
+.tabs .search::placeholder{color:#9aa0ad}
+.tab-body{flex:1;overflow:auto;min-height:0}
+.tab-panel{display:none;height:100%}
+.tab-panel.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{position:sticky;top:0;z-index:2;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);text-align:left;font-weight:600;color:var(--ink2);padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.06);font-size:11.5px;letter-spacing:.4px;text-transform:uppercase}
+tbody td{padding:8px 14px;border-bottom:1px solid rgba(0,0,0,.035);vertical-align:top;word-break:break-word}
+tbody tr:hover{background:rgba(255,255,255,.5)}
+tbody td.mono{font-family:"SF Mono","Cascadia Code","Consolas",monospace;font-size:11.5px;color:#3b4050}
+.tag{display:inline-block;padding:1px 7px;border-radius:5px;font-size:10.5px;font-weight:600;background:rgba(140,150,255,.15);color:#5c5fd8}
+.tag.miss{background:rgba(255,140,140,.18);color:#c95050}
+.empty{display:flex;align-items:center;justify-content:center;height:100%;min-height:200px;color:#9aa0ad;font-style:italic;font-size:13px;padding:40px;text-align:center}
+#rawContent{padding:14px;height:100%;overflow:auto}
+#diagContent{font-family:"SF Mono","Cascadia Code","Consolas",monospace;font-size:12px;color:#3b4050;line-height:1.6;white-space:pre-wrap;background:rgba(255,255,255,.4);border-radius:12px;margin:14px;padding:16px;border:1px solid rgba(255,255,255,.6);height:calc(100% - 28px);overflow:auto}
+.raw-block{margin-bottom:14px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.8)}
+.raw-block h4{margin:0;padding:8px 14px;font-size:12px;font-weight:600;color:var(--ink2);background:rgba(255,255,255,.75);border-bottom:1px solid rgba(0,0,0,.05)}
+.raw-block pre{margin:0;padding:12px 14px;font-family:"SF Mono","Cascadia Code","Consolas",monospace;font-size:11.5px;line-height:1.5;color:#333a48;white-space:pre;overflow:auto;max-height:420px}
+.statusbar{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;gap:12px;flex-shrink:0}
+.statusbar .summary{font-size:12px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.online-ctrl{display:flex;align-items:center;gap:8px;flex-shrink:0}
+#onlineProgress{font-family:"SF Mono","Consolas",monospace;font-size:11.5px;color:var(--ink3);min-width:60px;text-align:right}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.28);background-clip:padding-box;border:2px solid transparent}
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,34,46,.92);color:#fff;padding:10px 20px;border-radius:12px;font-size:12.5px;opacity:0;transition:all .25s;z-index:1000;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:80vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#overlay{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;background:rgba(20,24,36,.35);backdrop-filter:blur(6px)}
+#overlay.show{display:flex}
+#overlay .box{background:rgba(255,255,255,.94);border-radius:16px;padding:22px 32px;box-shadow:0 20px 60px rgba(0,0,0,.2);font-size:13px;color:var(--ink);min-width:240px;text-align:center}
+#overlay .box .spinner{width:30px;height:30px;margin:0 auto 12px;border:3px solid rgba(110,140,255,.2);border-top-color:#6aa0ff;border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="glass header">
+    <div class="brand">
+      <div class="logo"></div>
+      <h1>CS2 CFG Viewer<span class="ver">v4.1.0</span></h1>
+    </div>
+    <div class="links">
+      <a href="https://github.com/d1irgger/CS2-CFG-view" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="https://t.me/timharrys" target="_blank" rel="noreferrer">Telegram</a>
+    </div>
+  </header>
+
+  <section class="glass toolbar">
+    <div class="row">
+      <button id="btnPickDir" class="primary" title="推荐直接选择 Steam\userdata 目录（更快）">📁 选择 Steam / userdata 目录</button>
+      <button id="btnPickFiles" title="手动选择 machine_convars / user_convars / user_keys / video 文件">📂 手动加载配置文件</button>
+      <button id="btnImportAutoexec">📄 导入 autoexec.cfg</button>
+      <button id="btnImportCvarlist" title="从 SuGolYolLom/CS2-Cvars-Cmds 或 ArmynC/ArminC-CS2-Cvars 下载 cvarlist.md 后导入">📥 导入 cvarlist.md</button>
+      <div id="pathDisplay" class="path-display placeholder">选择 Steam 目录，或用 ProSettings 下载解析 autoexec</div>
+    </div>
+    <div class="row">
+      <span style="font-size:12px;color:var(--ink3);">数据源：</span>
+      <select id="sourceSelect" style="min-width:320px;">
+        <option value="">— 尚无可用数据源 —</option>
+      </select>
+      <button id="btnReload">🔄 加载</button>
+    </div>
+  </section>
+
+  <section class="glass content">
+    <nav class="tabs">
+      <button data-tab="keys" class="active">按键绑定</button>
+      <button data-tab="video">设置项</button>
+      <button data-tab="raw">原始文本</button>
+      <button data-tab="diag">诊断</button>
+      <input type="text" id="search" class="search" placeholder="🔍 搜索（按键 / 命令 / 设置项）...">
+    </nav>
+    <div class="tab-body">
+      <div id="tab-keys" class="tab-panel active">
+        <div class="empty" id="keys-empty">还没有载入任何配置</div>
+        <table id="keys-table" style="display:none;">
+          <thead><tr>
+            <th style="width:80px;">源</th><th style="width:180px;">按键</th>
+            <th style="width:150px;">按键中文</th><th style="width:34%;">命令</th>
+            <th>命令中文</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="tab-video" class="tab-panel">
+        <div class="empty" id="video-empty">还没有载入任何配置</div>
+        <table id="video-table" style="display:none;">
+          <thead><tr>
+            <th style="width:24%;">设置项</th><th style="width:24%;">设置项中文</th>
+            <th style="width:90px;">值</th><th style="width:22%;">值中文</th>
+            <th>官方英文描述</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="tab-raw" class="tab-panel">
+        <div id="rawContent" class="empty">还没有载入任何配置</div>
+      </div>
+      <div id="tab-diag" class="tab-panel">
+        <pre id="diagContent">还没有载入任何配置</pre>
+      </div>
+    </div>
+  </section>
+
+  <footer class="glass statusbar">
+    <span class="summary" id="summary">还没有载入任何配置</span>
+    <div class="online-ctrl">
+      <span id="onlineProgress">0/0</span>
+      <button id="btnStartOnline">🌐 开始联网翻译</button>
+      <button id="btnStopOnline" class="danger" disabled>⏹ 停止</button>
+    </div>
+  </footer>
+</div>
+
+<div id="toast"></div>
+<div id="overlay"><div class="box"><div class="spinner"></div><div id="overlayMsg">正在扫描…</div></div></div>
+
+<input type="file" id="dirInput" webkitdirectory directory multiple hidden>
+<input type="file" id="filesInput" multiple accept=".vcfg,.txt,.cfg" hidden>
+<input type="file" id="autoexecInput" accept=".cfg,.txt" hidden>
+<input type="file" id="cvarlistInput" accept=".md,.txt" hidden>
+
+<script>
+"use strict";
+
+/* ============================================================
+ * 按键名字典
+ * ============================================================ */
+const KEY_NAME_CN = Object.assign(
+  {
+    "mouse1":"鼠标左键","mouse2":"鼠标右键","mouse3":"鼠标中键",
+    "mouse4":"鼠标侧键1","mouse5":"鼠标侧键2",
+    "mouse6":"鼠标附加键6","mouse7":"鼠标附加键7","mouse8":"鼠标附加键8",
+    "mwheelup":"滚轮上","mwheeldown":"滚轮下",
+    "mouse_x":"鼠标水平轴（视角）","mouse_y":"鼠标垂直轴（视角）","mouse_wheel":"鼠标滚轮",
+    "shift":"Shift","rshift":"右 Shift","lshift":"左 Shift",
+    "ctrl":"Ctrl","control":"Ctrl","rctrl":"右 Ctrl","lctrl":"左 Ctrl",
+    "alt":"Alt","ralt":"右 Alt","lalt":"左 Alt",
+    "capslock":"CapsLock","numlock":"NumLock","scrolllock":"ScrollLock",
+    "space":"空格","tab":"Tab","enter":"回车","return":"回车",
+    "escape":"Esc","esc":"Esc","backspace":"退格",
+    "del":"Del","delete":"Del","ins":"Ins","insert":"Ins",
+    "home":"Home","end":"End","pgup":"PgUp","pgdn":"PgDn",
+    "pageup":"PgUp","pagedown":"PgDn",
+    "pause":"Pause","break":"Break","printscreen":"PrtSc","sysreq":"SysRq",
+    "up":"方向键 上","down":"方向键 下","left":"方向键 左","right":"方向键 右",
+    "uparrow":"方向键 上","downarrow":"方向键 下",
+    "leftarrow":"方向键 左","rightarrow":"方向键 右",
+    "kp_ins":"小键盘 Ins","kp_del":"小键盘 Del","kp_end":"小键盘 End",
+    "kp_down":"小键盘 下","kp_pgdn":"小键盘 PgDn",
+    "kp_left":"小键盘 左","kp_right":"小键盘 右",
+    "kp_home":"小键盘 Home","kp_up":"小键盘 上","kp_pgup":"小键盘 PgUp",
+    "kp_slash":"小键盘 /","kp_divide":"小键盘 /","kp_multiply":"小键盘 *",
+    "kp_minus":"小键盘 -","kp_plus":"小键盘 +","kp_enter":"小键盘 回车",
+    "kp_period":"小键盘 .","kp_decimal":"小键盘 .",
+    "semicolon":";","apostrophe":"'","comma":",","period":".",
+    "slash":"/","backslash":"反斜杠","lbracket":"[","rbracket":"]",
+    "minus":"-","equal":"=","backtick":"`","grave":"`",
+    '"':"引号键","\\":"反斜杠"
+  },
+  Object.fromEntries([..."abcdefghijklmnopqrstuvwxyz"].map(c=>[c,c.toUpperCase()])),
+  Object.fromEntries([..."0123456789"].map(c=>[c,c])),
+  Object.fromEntries([...Array(12)].map((_,i)=>["f"+(i+1),"F"+(i+1)])),
+  Object.fromEntries([...Array(10)].map((_,i)=>["kp_"+i,"小键盘 "+i]))
+);
+
+/* ============================================================
+ * 命令字典
+ * ============================================================ */
+const CMD_NAME_CN = {
+  "+attack":"开火","-attack":"松开开火","+attack2":"副开火/右键","-attack2":"松开副开火",
+  "+attack3":"第三开火","-attack3":"松开第三开火",
+  "+forward":"前进","-forward":"松开前进","+back":"后退","-back":"松开后退",
+  "+moveleft":"左移","-moveleft":"松开左移","+moveright":"右移","-moveright":"松开右移",
+  "+left":"左转","-left":"松开左转","+right":"右转","-right":"松开右转",
+  "+up":"上浮/向上","-up":"松开向上","+down":"下潜/向下","-down":"松开向下",
+  "+jump":"跳跃","-jump":"松开跳跃","+duck":"蹲下","-duck":"松开蹲下",
+  "+sprint":"冲刺（按住）","-sprint":"松开冲刺",
+  "+speed":"静步/慢走","-speed":"松开静步","+walk":"静步/慢走","-walk":"松开静步",
+  "+use":"使用/互动","-use":"松开使用","use":"使用",
+  "+reload":"换弹","-reload":"松开换弹",
+  "drop":"丢弃武器","+drop":"丢弃武器",
+  "+lookup":"视角上抬","+lookdown":"视角下压",
+  "+mlook":"鼠标控制视角","+klook":"键盘控制视角",
+  "+zoom":"开镜","-zoom":"松开开镜",
+  "+lookatweapon":"检视武器","-lookatweapon":"停止检视","inspect":"检视",
+  "yaw":"偏航（水平视角）","pitch":"俯仰（垂直视角）",
+  "+showscores":"显示比分","-showscores":"关闭比分",
+  "+voicerecord":"语音","-voicerecord":"松开语音",
+  "+radialradio":"无线电轮盘","+radialradio2":"无线电轮盘 2","+radialradio3":"无线电轮盘 3",
+  "+spray_menu":"喷漆菜单",
+  "+cl_show_team_equipment":"显示队友装备","cl_show_team_equipment":"显示队友装备",
+  "cl_showpos":"显示坐标","toggleradarscale":"切换雷达缩放",
+  "show_loadout_toggle":"显示/隐藏装备栏","show_loadout_toggle_off":"隐藏装备栏",
+  "toggleconsole":"切换控制台",
+  "jpeg":"截图","screenshot":"截图",
+  "play":"播放音效","playvol":"按音量播放音效",
+  "teamtoggle":"切换队伍","teammenu":"队伍菜单",
+  "noclip":"穿墙","impulse":"impulse 命令","bot_place":"放置机器人",
+  "mute":"静音","pause":"暂停","quit":"退出游戏","quit prompt":"退出游戏（带确认）",
+  "slot1":"主武器","slot2":"副武器","slot3":"近战刀","slot4":"手雷","slot5":"C4",
+  "slot6":"道具 6","slot7":"道具 7","slot8":"道具 8","slot9":"道具 9",
+  "slot10":"道具 10","slot11":"道具 11","slot12":"道具 12",
+  "invnext":"下一个武器","invprev":"上一个武器","lastinv":"上一个武器","switchhands":"换手",
+  "say":"全体发言","say_team":"队伍发言",
+  "messagemode":"全体聊天","messagemode2":"队伍聊天","messagemode3":"聊天模式 3",
+  "radio":"无线电","radio1":"无线电 1","radio2":"无线电 2","radio3":"无线电 3",
+  "player_ping":"玩家标记（Ping）",
+  "buy":"购买菜单","buymenu":"购买菜单",
+  "buyammo1":"购买主武器弹药","buyammo2":"购买副武器弹药",
+  "autobuy":"自动购买","rebuy":"重复上次购买",
+  "sellbackall":"退回全部购买","cancelselect":"取消当前选择",
+  "cs_quit_prompt":"退出游戏确认",
+  "callvote":"发起投票","vote":"投票",
+  "save":"存档","load":"读档","save quick":"快速存档","load quick":"快速读档",
+  "quick_save":"快速存档","quick_load":"快速读档",
+  "<unbound>":"未绑定",
+  "weapon_ak47":"AK-47","weapon_m4a1":"M4A4","weapon_m4a1_silencer":"M4A1-S",
+  "weapon_awp":"AWP","weapon_deagle":"沙漠之鹰","weapon_usp_silencer":"USP-S",
+  "weapon_hkp2000":"P2000","weapon_glock":"Glock-18","weapon_p250":"P250",
+  "weapon_fiveseven":"Five-SeveN","weapon_tec9":"Tec-9","weapon_elite":"双持贝瑞塔",
+  "weapon_galilar":"Galil AR","weapon_famas":"FAMAS","weapon_sg556":"SG 553",
+  "weapon_aug":"AUG","weapon_ssg08":"SSG 08","weapon_scar20":"SCAR-20",
+  "weapon_g3sg1":"G3SG1","weapon_nova":"Nova","weapon_xm1014":"XM1014",
+  "weapon_mag7":"MAG-7","weapon_sawedoff":"Sawed-Off","weapon_m249":"M249",
+  "weapon_negev":"Negev","weapon_mac10":"MAC-10","weapon_mp9":"MP9",
+  "weapon_mp7":"MP7","weapon_mp5sd":"MP5-SD","weapon_ump45":"UMP-45",
+  "weapon_p90":"P90","weapon_bizon":"PP-Bizon",
+  "weapon_hegrenade":"高爆手雷","weapon_flashbang":"闪光弹",
+  "weapon_smokegrenade":"烟雾弹","weapon_molotov":"燃烧瓶",
+  "weapon_incgrenade":"燃烧弹","weapon_decoy":"诱饵弹",
+  "weapon_taser":"电击枪","weapon_c4":"C4","weapon_knife":"刀",
+  "weapon_knife_t":"T 刀","weapon_knife_karambit":"爪子刀","weapon_healthshot":"医疗针",
+  "vest":"防弹衣","vesthelm":"防弹衣 + 头盔","defuser":"拆弹器","taser":"电击枪",
+  "item_assaultsuit":"防弹衣 + 头盔","item_kevlar":"防弹衣","item_defuser":"拆弹器",
+  "r_cleardecals":"清除血迹"
+};
+
+/* ============================================================
+ * 设置项名称字典
+ * ============================================================ */
+const VIDEO_NAME_CN = {
+  "Version":"版本","VendorID":"厂商 ID","DeviceID":"设备 ID","Autoconfig":"自动配置等级",
+  "setting.defaultres":"分辨率宽度","setting.defaultresheight":"分辨率高度",
+  "setting.fullscreen":"全屏模式","setting.coop_fullscreen":"合作模式全屏",
+  "setting.fullscreen_min_on_focus_loss":"失焦时最小化全屏",
+  "setting.nowindowborder":"无边框窗口","setting.high_dpi":"高 DPI 缩放",
+  "setting.aspectratiomode":"宽高比模式","setting.aspectranormal":"宽高比模式",
+  "setting.refreshrate_numerator":"刷新率（分子）","setting.refreshrate_denominator":"刷新率（分母）",
+  "setting.refreshrate_default":"默认刷新率","setting.monitor_index":"显示器索引",
+  "setting.knowndevice":"已知设备标记",
+  "setting.mat_vsync":"垂直同步","setting.mat_triplebuffered":"三重缓冲",
+  "setting.mat_queue_mode":"多线程渲染模式","setting.mat_monitorgamma":"显示器伽马",
+  "setting.mat_monitorgamma_tv_enabled":"电视伽马",
+  "setting.gpu_level":"GPU 性能等级","setting.gpu_mem_level":"显存等级",
+  "setting.cpu_level":"CPU 性能等级","setting.r_low_latency":"低延迟模式",
+  "setting.shaderquality":"着色器质量","setting.texturequality":"纹理质量",
+  "setting.detailquality":"细节质量","setting.particlequality":"粒子质量",
+  "setting.shadowquality":"阴影质量","setting.r_texturefilteringquality":"纹理过滤质量",
+  "setting.msaa_samples":"MSAA 采样数","setting.r_csgo_cmaa_enable":"CMAA 抗锯齿",
+  "setting.videocfg_shadow_quality":"阴影质量","setting.videocfg_dynamic_shadows":"动态阴影",
+  "setting.videocfg_texture_detail":"纹理细节","setting.videocfg_particle_detail":"粒子细节",
+  "setting.videocfg_ao_detail":"环境光遮蔽细节","setting.videocfg_hdr_detail":"HDR 细节",
+  "setting.videocfg_fsr_detail":"FSR 细节","setting.r_csgo_shadows_quality":"阴影质量",
+  "setting.r_csgo_water_effects":"水面效果","setting.r_csgo_water_reflections":"水面反射",
+  "setting.r_csgo_particle_quality":"粒子质量","setting.r_csgo_character_quality":"角色质量",
+  "setting.r_csgo_boost_player_contrast":"增强玩家对比度","setting.r_csgo_ui_contrast":"UI 对比度",
+  "setting.r_csgo_motion_blur":"动态模糊","setting.r_csgo_texture_filtering_mode":"纹理过滤模式",
+  "setting.optional_user_active_weapon_bloom":"武器动态模糊","setting.cl_predict":"客户端预测",
+  "setting.frame_rate_max":"最大帧率","setting.num_workers":"工作线程数",
+  "setting.multicore":"多核渲染","setting.mat_shader_cache":"着色器缓存",
+  "volume":"音量","snd_musicvolume":"音乐音量","snd_gamevolume":"游戏音量",
+  "snd_voipvolume":"语音音量","snd_menumusic_volume":"菜单音乐音量",
+  "snd_mute_losefocus":"失焦时静音","snd_mute_mvp_music_live_players":"屏蔽 MVP 音乐（真人玩家）",
+  "snd_autodetect_latency":"自动检测延迟","snd_mixahead":"音频预混时间",
+  "snd_headphone_eq":"耳机均衡器","snd_spatialize_lerp":"空间化插值",
+  "snd_steamaudio_enable_perspective_correction":"Steam Audio 透视校正",
+  "snd_deathcamera_volume":"死亡镜头音量","snd_mapobjective_volume":"地图目标音效音量",
+  "snd_mvp_volume":"MVP 音量","snd_roundaction_volume":"回合动作音量",
+  "snd_roundend_volume":"回合结束音量","snd_roundstart_volume":"回合开始音量",
+  "snd_tensecondwarning_volume":"十秒警告音量","snd_duckerattacktime":"闪避攻击时间",
+  "snd_duckerreleasetime":"闪避释放时间","snd_duckerthreshold":"闪避阈值",
+  "snd_ducktovolume":"闪避到音量","snd_toolvolume":"工具音量",
+  "speaker_config":"扬声器配置","dsp_volume":"DSP 音量",
+  "voice_scale":"语音音量","voice_threshold":"语音激活阈值",
+  "voice_modenable":"启用语音","voice_always_sample_mic":"始终采样麦克风",
+  "voice_vox":"语音激活模式",
+  "rate":"网络速率","net_allow_multicast":"允许组播","net_maxroutable":"最大可路由大小",
+  "cl_interp":"插值时间","cl_interp_ratio":"插值比率","cl_lagcompensation":"延迟补偿",
+  "cl_predictweapons":"客户端预测武器","cl_net_buffer_ticks":"网络缓冲 tick",
+  "cl_timeout":"网络超时","sv_voiceenable":"启用服务器语音","sv_skyname":"天空盒名称",
+  "tv_nochat":"屏蔽观战聊天","mm_csgo_community_search_players_min":"社区搜索最少玩家数",
+  "mm_dedicated_search_maxping":"专用服务器最大 Ping",
+  "hud_scaling":"HUD 缩放","hud_showtargetid":"显示目标 ID","hud_fastswitch":"快速切换武器",
+  "cl_crosshaircolor":"准星颜色","cl_crosshaircolor_r":"准星颜色红",
+  "cl_crosshaircolor_g":"准星颜色绿","cl_crosshaircolor_b":"准星颜色蓝",
+  "cl_crosshairalpha":"准星透明度","cl_crosshairdot":"准星中心点",
+  "cl_crosshairsize":"准星大小","cl_crosshairthickness":"准星粗细",
+  "cl_crosshairgap":"准星间距","cl_crosshairstyle":"准星样式",
+  "cl_crosshair_drawoutline":"准星外描边","cl_crosshair_outlinethickness":"准星描边粗细",
+  "cl_crosshair_recoil":"准星跟随后坐力","cl_crosshair_sniper_width":"狙击准星线宽",
+  "cl_crosshair_t":"T 形准星","cl_crosshairgap_useweaponvalue":"准星间距使用武器值",
+  "cl_crosshairusealpha":"准星使用透明度","cl_crosshair_friendly_warning":"准星友方警告",
+  "cl_fixedcrosshairgap":"固定准星间距","cl_ironsight_dot_scale":"机瞄点缩放",
+  "cl_ironsight_usecrosshaircolor":"机瞄使用准星颜色","crosshair":"启用准星",
+  "cl_radar_scale":"雷达缩放","cl_radar_always_centered":"雷达始终居中",
+  "cl_radar_rotate":"雷达旋转","cl_radar_icon_scale_min":"雷达图标最小缩放",
+  "cl_radar_square_with_scoreboard":"比分板时雷达方形","cl_radar_square_always":"雷达始终方形",
+  "cl_radar_square_when_spectating":"观察时雷达方形","cl_radar_scale_dynamic":"动态雷达缩放",
+  "cl_radar_show_all_players_when_spectating":"观察时显示所有玩家",
+  "cl_hud_radar_scale":"HUD 雷达缩放","cl_hud_radar_background_alpha":"雷达背景透明度",
+  "cl_hud_radar_blur_background":"雷达背景模糊","cl_hud_radar_map_additive":"雷达地图叠加",
+  "cl_teamid_overhead_always":"始终显示队友标识","cl_teamid_overhead_mode":"队友标识模式",
+  "cl_teamid_overhead_colors_show":"显示队友标识颜色",
+  "cl_teamid_overhead_fade_near_crosshair":"队友标识在准星附近淡出",
+  "cl_teammate_colors_show":"队友颜色","cl_show_clan_in_death_notice":"死亡提示显示战队",
+  "viewmodel_fov":"视角模型 FOV","viewmodel_offset_x":"视角模型 X 偏移",
+  "viewmodel_offset_y":"视角模型 Y 偏移","viewmodel_offset_z":"视角模型 Z 偏移",
+  "viewmodel_presetpos":"视角模型预设位置","viewmodel_recoil":"视角模型后坐力",
+  "cl_righthand":"右手持枪","cl_prefer_lefthanded":"偏好左手",
+  "cl_bob":"视角摆动","cl_bobcycle":"视角摆动周期","cl_bob_lower_amt":"视角摆动下限",
+  "cl_bobamt_lat":"横向摆动幅度","cl_bobamt_vert":"纵向摆动幅度",
+  "sensitivity":"鼠标灵敏度","zoom_sensitivity_ratio":"开镜灵敏度倍率",
+  "zoom_sensitivity_ratio_mouse":"开镜灵敏度倍率（鼠标）","sensitivity_y_scale":"Y 轴灵敏度倍率",
+  "m_yaw":"鼠标水平灵敏度","m_pitch":"鼠标垂直灵敏度","m_rawinput":"原始鼠标输入",
+  "m_customaccel":"自定义鼠标加速","m_customaccel_exponent":"鼠标加速指数",
+  "m_customaccel_max":"鼠标加速上限","m_customaccel_scale":"鼠标加速系数",
+  "m_mousespeed":"鼠标速度","mouse_inverty":"鼠标 Y 轴反转",
+  "name":"玩家名称","cl_clanid":"战队 ID","cl_color":"颜色","cl_hud_color":"HUD 颜色",
+  "fov_desired":"视野 FOV","fps_max":"最大帧率","fps_max_ui":"UI 最大帧率",
+  "con_enable":"启用控制台","con_allownotify":"允许控制台通知",
+  "cl_showloadout":"显示装备栏","cl_autowepswitch":"自动切换拾取武器",
+  "cl_use_opens_buy_menu":"使用键打开购买菜单","cl_disable_round_end_report":"禁用回合结束报告",
+  "cl_allow_animated_avatars":"允许动态头像","cl_autohelp":"自动帮助提示",
+  "cl_versus_intro":"对战开场动画","cl_weapon_selection_rarity_color":"武器选择稀有度着色",
+  "cl_quickinventory_filename":"快速库存文件名","cl_quickinventory_lastinv":"快速库存使用上次武器",
+  "cl_quickinventory_line_update_speed":"快速库存行更新速度",
+  "cl_inventory_radial_immediate_select":"库存转盘立即选择",
+  "cl_inventory_radial_tap_to_cycle":"库存转盘点击循环",
+  "cl_buywheel_donate_key":"购买轮盘捐赠键","cl_buywheel_nomousecentering":"购买轮盘禁用鼠标居中",
+  "cl_buywheel_nonumberpurchasing":"购买轮盘禁用数字购买","cl_chatfilters":"聊天过滤",
+  "cl_mute_all_but_friends_and_party":"仅队友和好友语音","cl_mute_enemy_team":"屏蔽敌方语音",
+  "cl_playerspray_auto_apply":"喷漆自动应用","cl_player_ping_mute":"玩家标记静音",
+  "cl_ping_fade_deadzone":"标记淡出死区","cl_ping_fade_distance":"标记淡出距离",
+  "cl_sanitize_player_names":"过滤玩家名称",
+  "cl_scoreboard_mouse_enable_binding":"比分板启用鼠标绑定",
+  "cl_scoreboard_survivors_always_on":"比分板始终显示存活者",
+  "cl_show_observer_crosshair":"显示观战准星","cl_thirdperson":"第三人称",
+  "cl_auto_cursor_scale":"自动缩放光标","cl_cursor_scale":"光标缩放",
+  "cl_debounce_zoom":"开镜防抖","cl_sniper_auto_rezoom":"狙击自动重新开镜",
+  "cl_sniper_delay_unscope":"狙击延迟收镜","cl_sniper_show_inaccuracy":"显示狙击不准度",
+  "cl_enable_party_voice":"启用组队语音",
+  "violence_ablood":"血液效果","violence_agibs":"碎尸效果",
+  "violence_hblood":"人类血液效果","violence_hgibs":"人类碎尸效果",
+  "r_drawtracers_firstperson":"第一人称曳光弹","r_fullscreen_gamma":"全屏伽马",
+  "r_player_visibility_mode":"玩家可见性模式",
+  "r_spectator_flashbang_opacity":"观战闪光弹不透明度",
+  "spec_centerchasecam":"居中追踪镜头","spec_replay_autostart":"回放自动开始",
+  "spec_show_xray":"显示 X 光","spec_usenumberkeys_nobinds":"使用数字键切换玩家",
+  "option_duck_method":"蹲下方式","option_speed_method":"慢走方式"
+};
+
+/* ============================================================
+ * 设置项值字典
+ * ============================================================ */
+const VIDEO_VALUE_CN = {
+  "setting.fullscreen":{"0":"窗口化","1":"全屏","2":"窗口化（无边框）"},
+  "setting.coop_fullscreen":{"0":"关闭","1":"开启"},
+  "setting.nowindowborder":{"0":"否","1":"是"},
+  "setting.fullscreen_min_on_focus_loss":{"0":"关闭","1":"开启"},
+  "setting.high_dpi":{"0":"关闭","1":"开启"},
+  "setting.knowndevice":{"0":"未知","1":"已知"},
+  "setting.mat_vsync":{"0":"关闭","1":"开启","2":"双缓冲","3":"三重缓冲"},
+  "setting.mat_triplebuffered":{"0":"关闭","1":"开启"},
+  "setting.r_low_latency":{"0":"关闭","1":"开启","2":"超低延迟"},
+  "setting.gpu_level":{"0":"低","1":"中","2":"高","3":"极高"},
+  "setting.gpu_mem_level":{"0":"低","1":"中","2":"高"},
+  "setting.cpu_level":{"0":"低","1":"中","2":"高"},
+  "setting.shaderquality":{"0":"低","1":"中","2":"高"},
+  "setting.texturequality":{"0":"低","1":"中","2":"高"},
+  "setting.detailquality":{"0":"低","1":"中","2":"高"},
+  "setting.particlequality":{"0":"低","1":"中","2":"高"},
+  "setting.shadowquality":{"0":"低","1":"中","2":"高"},
+  "setting.r_texturefilteringquality":{"0":"双线性","1":"三线性","2":"各向异性 2x","3":"各向异性 4x","4":"各向异性 8x","5":"各向异性 16x"},
+  "setting.msaa_samples":{"0":"关闭","2":"2x MSAA","4":"4x MSAA","8":"8x MSAA"},
+  "setting.r_csgo_cmaa_enable":{"0":"关闭","1":"开启"},
+  "setting.videocfg_shadow_quality":{"0":"低","1":"中","2":"高"},
+  "setting.videocfg_texture_detail":{"0":"低","1":"中","2":"高"},
+  "setting.videocfg_particle_detail":{"0":"低","1":"中","2":"高"},
+  "setting.videocfg_ao_detail":{"0":"关闭","1":"低","2":"高"},
+  "setting.videocfg_hdr_detail":{"-1":"自动","0":"关闭","1":"开启"},
+  "setting.videocfg_fsr_detail":{"0":"关闭","1":"开启","2":"高质量"},
+  "setting.videocfg_dynamic_shadows":{"0":"关闭","1":"开启"},
+  "setting.aspectratiomode":{"0":"自动","1":"4:3","2":"16:9","3":"16:10"},
+  "setting.aspectranormal":{"0":"自动","1":"4:3","2":"16:9","3":"16:10"},
+  "setting.monitor_index":{"0":"主显示器","1":"第二显示器"},
+  "Autoconfig":{"0":"未配置","1":"低配","2":"中配","3":"高配"},
+  "setting.r_csgo_motion_blur":{"0":"关闭","1":"开启"},
+  "setting.r_csgo_boost_player_contrast":{"0":"关闭","1":"开启"},
+  "setting.r_csgo_shadows_quality":{"0":"低","1":"中","2":"高"},
+  "setting.r_csgo_particle_quality":{"0":"低","1":"中","2":"高"},
+  "setting.r_csgo_character_quality":{"0":"低","1":"中","2":"高"},
+  "setting.r_csgo_water_effects":{"0":"关闭","1":"开启"},
+  "setting.r_csgo_water_reflections":{"0":"关闭","1":"开启"},
+  "setting.r_csgo_texture_filtering_mode":{"0":"双线性","1":"三线性","2":"各向异性 2x","3":"各向异性 4x","4":"各向异性 8x","5":"各向异性 16x"},
+  "setting.optional_user_active_weapon_bloom":{"0":"关闭","1":"开启"},
+  "setting.multicore":{"0":"关闭","1":"开启"},
+  "setting.snd_mute_losefocus":{"0":"关闭","1":"开启"},
+  "setting.mat_monitorgamma_tv_enabled":{"0":"关闭","1":"开启"},
+  "setting.cl_predict":{"0":"关闭","1":"开启"},
+  "setting.mat_shader_cache":{"0":"关闭","1":"开启"},
+  "m_rawinput":{"0":"关闭","1":"开启"},
+  "m_customaccel":{"0":"关闭","1":"默认","2":"经典","3":"自定义"},
+  "cl_righthand":{"0":"左手","1":"右手"},
+  "cl_prefer_lefthanded":{"0":"否","1":"是"},
+  "cl_showloadout":{"0":"关闭","1":"开启"},
+  "cl_autowepswitch":{"0":"关闭","1":"开启"},
+  "cl_use_opens_buy_menu":{"0":"关闭","1":"开启"},
+  "cl_crosshairdot":{"0":"关闭","1":"开启"},
+  "cl_crosshair_t":{"0":"关闭","1":"开启"},
+  "cl_crosshair_drawoutline":{"0":"关闭","1":"开启"},
+  "cl_crosshair_recoil":{"0":"关闭","1":"开启"},
+  "cl_crosshairgap_useweaponvalue":{"0":"关闭","1":"开启"},
+  "cl_crosshairusealpha":{"0":"关闭","1":"开启"},
+  "cl_crosshairstyle":{"0":"默认","1":"默认静态","2":"经典","3":"经典动态","4":"经典","5":"经典动态"},
+  "cl_crosshaircolor":{"0":"红","1":"绿","2":"黄","3":"蓝","4":"青","5":"自定义"},
+  "cl_crosshair_sniper_show_normal_inaccuracy":{"0":"关闭","1":"开启"},
+  "cl_crosshair_friendly_warning":{"0":"关闭","1":"开启"},
+  "hud_fastswitch":{"0":"关闭","1":"开启","2":"仅数字键"},
+  "con_enable":{"0":"关闭","1":"开启"},
+  "con_allownotify":{"0":"关闭","1":"开启"},
+  "crosshair":{"0":"关闭","1":"开启"},
+  "cl_disable_round_end_report":{"0":"关闭","1":"开启"},
+  "cl_allow_animated_avatars":{"0":"关闭","1":"开启"},
+  "cl_autohelp":{"0":"关闭","1":"开启"},
+  "cl_versus_intro":{"0":"关闭","1":"开启"},
+  "cl_weapon_selection_rarity_color":{"0":"关闭","1":"开启"},
+  "cl_teamid_overhead_always":{"0":"关闭","1":"开启"},
+  "cl_teamid_overhead_mode":{"0":"关闭","1":"仅颜色","2":"完整"},
+  "cl_radar_rotate":{"0":"关闭","1":"开启"},
+  "cl_radar_always_centered":{"0":"关闭","1":"开启"},
+  "cl_radar_scale_dynamic":{"0":"关闭","1":"开启"},
+  "cl_radar_square_always":{"0":"关闭","1":"开启"},
+  "cl_radar_square_when_spectating":{"0":"关闭","1":"开启"},
+  "cl_radar_square_with_scoreboard":{"0":"关闭","1":"开启"},
+  "cl_radar_show_all_players_when_spectating":{"0":"关闭","1":"开启"},
+  "cl_hud_radar_blur_background":{"0":"关闭","1":"开启"},
+  "cl_hud_radar_map_additive":{"0":"关闭","1":"开启"},
+  "cl_quickinventory_lastinv":{"0":"关闭","1":"开启"},
+  "cl_inventory_radial_immediate_select":{"0":"关闭","1":"开启"},
+  "cl_inventory_radial_tap_to_cycle":{"0":"关闭","1":"开启"},
+  "cl_teammate_colors_show":{"0":"关闭","1":"开启"},
+  "cl_teamid_overhead_colors_show":{"0":"关闭","1":"开启"},
+  "cl_sanitize_player_names":{"0":"关闭","1":"开启"},
+  "cl_show_clan_in_death_notice":{"0":"关闭","1":"开启"},
+  "cl_scoreboard_survivors_always_on":{"0":"关闭","1":"开启"},
+  "cl_predictweapons":{"0":"关闭","1":"开启"},
+  "cl_lagcompensation":{"0":"关闭","1":"开启"},
+  "snd_mute_losefocus":{"0":"关闭","1":"开启"},
+  "snd_mute_mvp_music_live_players":{"0":"关闭","1":"开启"},
+  "snd_autodetect_latency":{"0":"关闭","1":"开启"},
+  "snd_steamaudio_enable_perspective_correction":{"0":"关闭","1":"开启"},
+  "voice_modenable":{"0":"关闭","1":"开启"},
+  "voice_always_sample_mic":{"0":"关闭","1":"开启"},
+  "voice_vox":{"0":"按键说话","1":"语音激活"},
+  "violence_ablood":{"0":"关闭","1":"开启"},
+  "violence_agibs":{"0":"关闭","1":"开启"},
+  "violence_hblood":{"0":"关闭","1":"开启"},
+  "violence_hgibs":{"0":"关闭","1":"开启"},
+  "option_duck_method":{"0":"按住","1":"切换"},
+  "option_speed_method":{"0":"按住","1":"切换"},
+  "mouse_inverty":{"0":"关闭","1":"开启"},
+  "cl_debounce_zoom":{"0":"关闭","1":"开启"},
+  "cl_sniper_auto_rezoom":{"0":"关闭","1":"开启"},
+  "cl_sniper_show_inaccuracy":{"0":"关闭","1":"开启"},
+  "cl_sniper_delay_unscope":{"0":"关闭","1":"开启"},
+  "cl_ironsight_usecrosshaircolor":{"0":"关闭","1":"开启"},
+  "r_drawtracers_firstperson":{"0":"关闭","1":"开启"},
+  "r_player_visibility_mode":{"0":"默认","1":"增强"},
+  "spec_centerchasecam":{"0":"关闭","1":"开启"},
+  "spec_replay_autostart":{"0":"关闭","1":"开启"},
+  "spec_usenumberkeys_nobinds":{"0":"关闭","1":"开启"},
+  "snd_toolvolume":{"0":"静音","1":"正常"},
+  "sv_voiceenable":{"0":"关闭","1":"开启","false":"关闭","true":"开启"},
+  "tv_nochat":{"0":"关闭","1":"开启"},
+  "net_allow_multicast":{"0":"关闭","1":"开启"},
+  "cl_enable_party_voice":{"0":"关闭","1":"开启"},
+  "cl_auto_cursor_scale":{"0":"关闭","1":"开启"},
+  "cl_player_ping_mute":{"0":"关闭","1":"开启"},
+  "cl_playerspray_auto_apply":{"0":"关闭","1":"开启"},
+  "cl_mute_enemy_team":{"0":"关闭","1":"开启"},
+  "cl_thirdperson":{"0":"关闭","1":"开启"},
+  "closecaption":{"0":"关闭","1":"开启"},
+  "cc_subtitles":{"0":"关闭","1":"开启"},
+  "adsp_debug":{"0":"关闭","1":"开启"},
+  "battery_saver":{"0":"关闭","1":"开启"},
+  "sk_autoaim_mode":{"0":"关闭","1":"开启"},
+  "cam_snapto":{"0":"关闭","1":"开启"},
+  "cam_collision":{"0":"关闭","1":"开启"},
+  "sv_specnoclip":{"0":"关闭","1":"开启"},
+  "sv_log_onefile":{"0":"关闭","1":"开启"},
+  "sv_logbans":{"0":"关闭","1":"开启"},
+  "sv_logecho":{"0":"关闭","1":"开启"},
+  "sv_logfile":{"0":"关闭","1":"开启"},
+  "sv_logflush":{"0":"关闭","1":"开启"},
+  "sv_pause_on_console_open":{"0":"关闭","1":"开启"},
+  "viewmodel_presetpos":{"0":"自定义","1":"桌面","2":"经典","3":"专业"},
+  "speaker_config":{"-1":"默认","0":"立体声","1":"耳机","2":"2.1","3":"4.1","4":"5.1","5":"7.1"},
+  "cl_color":{"0":"黄","1":"紫","2":"绿","3":"蓝","4":"橙"},
+  "cl_hud_color":{"0":"默认","1":"白","2":"浅蓝","3":"绿","4":"黄","5":"橙","6":"粉","7":"紫","8":"红","9":"蓝","10":"青","11":"自定义"}
+};
+
+/* ============================================================
+ * 高频命令官方中文描述（预翻译，零网络请求）
+ * 数据源：SuGolYolLom/CS2-Cvars-Cmds + ArmynC/ArminC-CS2-Cvars + Valve Developer Community
+ * ============================================================ */
+const CONVAR_DESC_CN = {
+  "cl_crosshaircolor": "准星颜色",
+  "cl_crosshaircolor_r": "准星颜色（红分量）",
+  "cl_crosshaircolor_g": "准星颜色（绿分量）",
+  "cl_crosshaircolor_b": "准星颜色（蓝分量）",
+  "cl_crosshairalpha": "准星透明度",
+  "cl_crosshairdot": "准星中心点",
+  "cl_crosshairsize": "准星大小",
+  "cl_crosshairthickness": "准星粗细",
+  "cl_crosshairgap": "准星间距",
+  "cl_crosshairstyle": "准星样式",
+  "cl_crosshair_drawoutline": "准星外描边",
+  "cl_crosshair_outlinethickness": "准星描边粗细",
+  "cl_crosshair_recoil": "准星跟随后坐力",
+  "cl_crosshair_t": "T 形准星",
+  "cl_crosshairusealpha": "准星使用透明度",
+  "cl_crosshair_sniper_width": "狙击准星线宽",
+  "cl_crosshairgap_useweaponvalue": "准星间距使用武器值",
+  "cl_fixedcrosshairgap": "固定准星间距",
+  "cl_ironsight_dot_scale": "机瞄点缩放",
+  "cl_ironsight_usecrosshaircolor": "机瞄使用准星颜色",
+  "crosshair": "启用准星",
+  "hud_scaling": "HUD 缩放",
+  "hud_fastswitch": "快速切换武器",
+  "hud_showtargetid": "显示目标 ID",
+  "cl_showloadout": "显示装备栏",
+  "cl_disable_round_end_report": "禁用回合结束报告",
+  "cl_radar_scale": "雷达缩放",
+  "cl_radar_always_centered": "雷达始终居中",
+  "cl_radar_rotate": "雷达旋转",
+  "cl_radar_square_always": "雷达始终方形",
+  "cl_radar_square_with_scoreboard": "比分板时雷达方形",
+  "cl_radar_scale_dynamic": "动态雷达缩放",
+  "cl_radar_show_all_players_when_spectating": "观察时显示所有玩家",
+  "cl_hud_radar_scale": "HUD 雷达缩放",
+  "cl_hud_radar_background_alpha": "雷达背景透明度",
+  "cl_hud_radar_blur_background": "雷达背景模糊",
+  "cl_hud_radar_map_additive": "雷达地图叠加",
+  "viewmodel_fov": "视角模型 FOV",
+  "viewmodel_offset_x": "视角模型 X 偏移",
+  "viewmodel_offset_y": "视角模型 Y 偏移",
+  "viewmodel_offset_z": "视角模型 Z 偏移",
+  "viewmodel_presetpos": "视角模型预设位置",
+  "viewmodel_recoil": "视角模型后坐力",
+  "cl_righthand": "右手持枪",
+  "cl_prefer_lefthanded": "偏好左手",
+  "cl_bob": "视角摆动",
+  "cl_bobcycle": "视角摆动周期",
+  "cl_bob_lower_amt": "视角摆动下限",
+  "cl_bobamt_lat": "横向摆动幅度",
+  "cl_bobamt_vert": "纵向摆动幅度",
+  "sensitivity": "鼠标灵敏度",
+  "zoom_sensitivity_ratio": "开镜灵敏度倍率",
+  "zoom_sensitivity_ratio_mouse": "开镜灵敏度倍率（鼠标）",
+  "sensitivity_y_scale": "Y 轴灵敏度倍率",
+  "m_yaw": "鼠标水平灵敏度",
+  "m_pitch": "鼠标垂直灵敏度",
+  "m_rawinput": "原始鼠标输入",
+  "m_customaccel": "自定义鼠标加速",
+  "m_customaccel_exponent": "鼠标加速指数",
+  "m_customaccel_max": "鼠标加速上限",
+  "m_customaccel_scale": "鼠标加速系数",
+  "m_mousespeed": "鼠标速度",
+  "mouse_inverty": "鼠标 Y 轴反转",
+  "setting.mat_vsync": "垂直同步",
+  "setting.mat_triplebuffered": "三重缓冲",
+  "setting.mat_queue_mode": "多线程渲染模式",
+  "setting.mat_monitorgamma": "显示器伽马",
+  "setting.gpu_level": "GPU 性能等级",
+  "setting.gpu_mem_level": "显存等级",
+  "setting.cpu_level": "CPU 性能等级",
+  "setting.r_low_latency": "低延迟模式",
+  "setting.shaderquality": "着色器质量",
+  "setting.texturequality": "纹理质量",
+  "setting.detailquality": "细节质量",
+  "setting.particlequality": "粒子质量",
+  "setting.shadowquality": "阴影质量",
+  "setting.r_texturefilteringquality": "纹理过滤质量",
+  "setting.msaa_samples": "MSAA 采样数",
+  "setting.r_csgo_cmaa_enable": "CMAA 抗锯齿",
+  "setting.r_csgo_motion_blur": "动态模糊",
+  "setting.r_csgo_boost_player_contrast": "增强玩家对比度",
+  "setting.fullscreen": "全屏模式",
+  "setting.defaultres": "分辨率宽度",
+  "setting.defaultresheight": "分辨率高度",
+  "setting.nowindowborder": "无边框窗口",
+  "setting.high_dpi": "高 DPI 缩放",
+  "setting.aspectratiomode": "宽高比模式",
+  "setting.monitor_index": "显示器索引",
+  "fps_max": "最大帧率",
+  "fps_max_ui": "UI 最大帧率",
+  "fov_desired": "视野 FOV",
+  "volume": "主音量",
+  "snd_musicvolume": "音乐音量",
+  "snd_gamevolume": "游戏音量",
+  "snd_voipvolume": "语音音量",
+  "snd_menumusic_volume": "菜单音乐音量",
+  "snd_mute_losefocus": "失焦时静音",
+  "snd_mute_mvp_music_live_players": "屏蔽 MVP 音乐（真人玩家）",
+  "snd_autodetect_latency": "自动检测延迟",
+  "snd_mixahead": "音频预混时间",
+  "snd_headphone_eq": "耳机均衡器",
+  "speaker_config": "扬声器配置",
+  "voice_scale": "语音音量",
+  "voice_threshold": "语音激活阈值",
+  "voice_modenable": "启用语音",
+  "voice_vox": "语音激活模式",
+  "rate": "网络速率",
+  "cl_interp": "插值时间",
+  "cl_interp_ratio": "插值比率",
+  "cl_lagcompensation": "延迟补偿",
+  "cl_predictweapons": "客户端预测武器",
+  "cl_timeout": "网络超时",
+  "net_allow_multicast": "允许组播",
+  "net_maxroutable": "最大可路由大小",
+  "cl_autowepswitch": "自动切换拾取武器",
+  "cl_use_opens_buy_menu": "使用键打开购买菜单",
+  "cl_teamid_overhead_always": "始终显示队友标识",
+  "cl_teamid_overhead_mode": "队友标识模式",
+  "option_duck_method": "蹲下方式",
+  "option_speed_method": "慢走方式",
+  "violence_hblood": "人类血液效果",
+  "violence_ablood": "血液效果",
+  "violence_hgibs": "人类碎尸效果",
+  "violence_agibs": "碎尸效果",
+  "sv_cheats": "启用作弊命令",
+  "noclip": "穿墙飞行",
+  "god": "无敌模式",
+  "mp_roundtime": "回合时间（分钟）",
+  "mp_roundtime_defuse": "拆除模式回合时间（分钟）",
+  "mp_warmup_end": "立即结束热身",
+  "mp_freezetime": "回合开始冻结时间",
+  "mp_maxrounds": "最大回合数",
+  "sv_infinite_ammo": "无限弹药",
+  "sv_grenade_trajectory": "显示手雷轨迹",
+  "bot_kick": "踢出所有机器人",
+  "bot_stop": "停止所有机器人",
+  "give": "给予武器或物品",
+  "kill": "自杀",
+  "explode": "爆炸",
+  "say": "全体聊天",
+  "say_team": "队伍聊天",
+  "r_cleardecals": "清除血迹"
+};
+
+/* ============================================================
+ * 英文官方描述（用于 MyMemory 增强翻译上下文）
+ * 数据源：SuGolYolLom/CS2-Cvars-Cmds + Valve Developer Community
+ * 可通过“导入 cvarlist.md”按钮批量扩展
+ * ============================================================ */
+const CONVAR_DESC_EN = {
+  "cl_crosshaircolor": "Crosshair color",
+  "cl_crosshaircolor_r": "Crosshair color red component",
+  "cl_crosshaircolor_g": "Crosshair color green component",
+  "cl_crosshaircolor_b": "Crosshair color blue component",
+  "cl_crosshairalpha": "Crosshair alpha transparency",
+  "cl_crosshairdot": "Crosshair dot",
+  "cl_crosshairsize": "Crosshair size",
+  "cl_crosshairthickness": "Crosshair thickness",
+  "cl_crosshairgap": "Crosshair gap",
+  "cl_crosshairstyle": "Crosshair style",
+  "cl_crosshair_drawoutline": "Draw outline on crosshair",
+  "cl_crosshair_outlinethickness": "Crosshair outline thickness",
+  "cl_crosshair_recoil": "Crosshair follow recoil",
+  "cl_crosshair_t": "T-shaped crosshair",
+  "cl_crosshairusealpha": "Use alpha on crosshair",
+  "cl_crosshair_sniper_width": "Sniper crosshair width",
+  "cl_crosshairgap_useweaponvalue": "Use weapon value for crosshair gap",
+  "cl_fixedcrosshairgap": "Fixed crosshair gap",
+  "hud_scaling": "HUD scaling",
+  "hud_fastswitch": "Fast weapon switch",
+  "hud_showtargetid": "Show target ID",
+  "cl_radar_scale": "Radar scale",
+  "cl_radar_always_centered": "Radar always centered",
+  "cl_radar_rotate": "Radar rotate",
+  "cl_radar_square_always": "Radar always square",
+  "cl_radar_scale_dynamic": "Dynamic radar scale",
+  "sensitivity": "Mouse sensitivity",
+  "zoom_sensitivity_ratio": "Zoom sensitivity ratio",
+  "m_rawinput": "Raw mouse input",
+  "m_yaw": "Mouse horizontal sensitivity",
+  "m_pitch": "Mouse vertical sensitivity",
+  "viewmodel_fov": "Viewmodel field of view",
+  "viewmodel_offset_x": "Viewmodel X offset",
+  "viewmodel_offset_y": "Viewmodel Y offset",
+  "viewmodel_offset_z": "Viewmodel Z offset",
+  "viewmodel_presetpos": "Viewmodel preset position",
+  "cl_righthand": "Right hand viewmodel",
+  "cl_bob": "View bob",
+  "cl_bobcycle": "View bob cycle",
+  "setting.mat_vsync": "Vertical sync",
+  "setting.mat_triplebuffered": "Triple buffering",
+  "setting.gpu_level": "GPU performance level",
+  "setting.gpu_mem_level": "GPU memory level",
+  "setting.cpu_level": "CPU performance level",
+  "setting.r_low_latency": "Low latency mode",
+  "setting.shaderquality": "Shader quality",
+  "setting.texturequality": "Texture quality",
+  "setting.detailquality": "Detail quality",
+  "setting.particlequality": "Particle quality",
+  "setting.shadowquality": "Shadow quality",
+  "setting.msaa_samples": "MSAA samples",
+  "setting.r_csgo_motion_blur": "Motion blur",
+  "setting.fullscreen": "Fullscreen mode",
+  "setting.defaultres": "Resolution width",
+  "setting.defaultresheight": "Resolution height",
+  "fps_max": "Maximum FPS",
+  "fov_desired": "Field of view",
+  "volume": "Master volume",
+  "snd_musicvolume": "Music volume",
+  "snd_gamevolume": "Game volume",
+  "snd_voipvolume": "Voice volume",
+  "voice_scale": "Voice volume scale",
+  "voice_modenable": "Voice enabled",
+  "speaker_config": "Speaker configuration",
+  "rate": "Network rate",
+  "cl_interp": "Interpolation time",
+  "cl_interp_ratio": "Interpolation ratio",
+  "cl_lagcompensation": "Lag compensation",
+  "cl_predictweapons": "Predict weapons",
+  "cl_timeout": "Network timeout",
+  "cl_autowepswitch": "Auto switch weapon on pickup",
+  "cl_use_opens_buy_menu": "Use key opens buy menu",
+  "cl_showloadout": "Show loadout",
+  "cl_teamid_overhead_always": "Always show teammate ID",
+  "option_duck_method": "Duck method",
+  "option_speed_method": "Walk method",
+  "violence_hblood": "Human blood effects",
+  "violence_ablood": "Alien blood effects",
+  "sv_cheats": "Enable cheat commands",
+  "noclip": "Fly through walls",
+  "god": "Invulnerability",
+  "mp_roundtime": "Round time in minutes",
+  "mp_roundtime_defuse": "Defuse round time in minutes",
+  "mp_warmup_end": "End warmup immediately",
+  "mp_freezetime": "Freeze time at round start",
+  "mp_maxrounds": "Maximum rounds",
+  "sv_infinite_ammo": "Infinite ammunition",
+  "sv_grenade_trajectory": "Show grenade trajectory",
+  "bot_kick": "Kick all bots",
+  "bot_stop": "Stop all bots",
+  "give": "Give weapon or item",
+  "impulse": "Impulse command",
+  "kill": "Suicide",
+  "explode": "Explode player",
+  "say": "Global chat",
+  "say_team": "Team chat"
+};
+
+/* ============================================================
+ * 翻译工具
+ * ============================================================ */
+function normalizeKeyName(name){
+  if(!name) return "";
+  let n = String(name).trim();
+  if(n.toLowerCase().startsWith("key_")) n = n.slice(4);
+  return n.toLowerCase();
+}
+function lookup(dic, key){
+  if(!key) return null;
+  if(Object.prototype.hasOwnProperty.call(dic, key)) return dic[key];
+  const lower = key.toLowerCase();
+  if(Object.prototype.hasOwnProperty.call(dic, lower)) return dic[lower];
+  if(key[0]==="+" || key[0]==="-"){
+    const base = key.slice(1);
+    if(Object.prototype.hasOwnProperty.call(dic, base)) return dic[base];
+    if(Object.prototype.hasOwnProperty.call(dic, base.toLowerCase())) return dic[base.toLowerCase()];
+  }
+  return null;
+}
+function translateKeyLocal(key){ return KEY_NAME_CN[normalizeKeyName(key)] ?? null; }
+function translateVideoKeyLocal(key){
+  if(!key) return null;
+  if(VIDEO_NAME_CN[key] !== undefined) return VIDEO_NAME_CN[key];
+  if(key.startsWith("setting.")){
+    const k = key.slice(8);
+    if(VIDEO_NAME_CN[k] !== undefined) return VIDEO_NAME_CN[k];
+  }
+  if(VIDEO_NAME_CN["setting."+key] !== undefined) return VIDEO_NAME_CN["setting."+key];
+  return null;
+}
+function translateVideoValueLocal(key, value){
+  if(key==null || value==null) return null;
+  const sv = String(value);
+  let dic = VIDEO_VALUE_CN[key];
+  if(!dic && key.startsWith("setting.")) dic = VIDEO_VALUE_CN[key.slice(8)];
+  if(!dic) dic = VIDEO_VALUE_CN["setting."+key];
+  if(dic && dic[sv] !== undefined) return dic[sv];
+  const low = sv.toLowerCase();
+  if(low==="true") return "开启";
+  if(low==="false") return "关闭";
+  return null;
+}
+const SPLIT_RE = /[\s;]+/;
+function translateCmdLocal(cmd){
+  if(!cmd) return null;
+  const hit = lookup(CMD_NAME_CN, cmd);
+  if(hit) return hit;
+  const parts = cmd.trim().split(SPLIT_RE).filter(p=>p);
+  if(parts.length <= 1) return null;
+  const translated = [];
+  for(const p of parts){
+    const cn = lookup(CMD_NAME_CN, p) || translateVideoKeyLocal(p);
+    if(!cn) return null;
+    translated.push(cn);
+  }
+  return translated.join(" + ");
+}
+function cleanVideoKeyForTranslation(key){
+  let k = key || "";
+  if(k.startsWith("setting.")) k = k.slice(8);
+  return k.replace(/\./g," ").replace(/_/g," ").trim();
+}
+function lookupDescCN(key){
+  if(!key) return null;
+  if(CONVAR_DESC_CN[key] !== undefined) return CONVAR_DESC_CN[key];
+  if(key.startsWith("setting.")){
+    const k = key.slice(8);
+    if(CONVAR_DESC_CN[k] !== undefined) return CONVAR_DESC_CN[k];
+  }
+  return null;
+}
+function lookupDescEN(key){
+  if(!key) return null;
+  if(CONVAR_DESC_EN[key] !== undefined) return CONVAR_DESC_EN[key];
+  if(key.startsWith("setting.")){
+    const k = key.slice(8);
+    if(CONVAR_DESC_EN[k] !== undefined) return CONVAR_DESC_EN[k];
+  }
+  return null;
+}
+
+/* ============================================================
+ * cfg 解析
+ * ============================================================ */
+function tokenizeCfgLine(line){
+  const tokens = [];
+  let i = 0;
+  const n = line.length;
+  while(i < n){
+    const c = line[i];
+    if(c===" "||c==="\t"){ i++; }
+    else if(c==='"'){
+      i++;
+      const chars = [];
+      while(i < n && line[i] !== '"'){
+        if(line[i]==="\\" && i+1 < n){ chars.push(line[i+1]); i+=2; }
+        else { chars.push(line[i]); i++; }
+      }
+      if(i < n) i++;
+      tokens.push(chars.join(""));
+    }
+    else if(c==="/" && i+1 < n && line[i+1]==="/"){ break; }
+    else if(c===";"){ break; }
+    else {
+      const start = i;
+      while(i < n && line[i] !== " " && line[i] !== "\t"){
+        if(line[i]==="/" && i+1 < n && line[i+1]==="/") break;
+        if(line[i]===";") break;
+        i++;
+      }
+      tokens.push(line.slice(start, i));
+    }
+  }
+  return tokens;
+}
+const SKIP_CMDS = new Set(["echo","exec","clear","host_writeconfig","unbind","unbindall","alias"]);
+function parseAutoexecCfg(text){
+  const binds = [], settings = [];
+  for(const rawLine of text.split(/\r?\n/)){
+    const line = rawLine.trim();
+    if(!line || line.startsWith("//")) continue;
+    const tokens = tokenizeCfgLine(line);
+    if(!tokens.length) continue;
+    const cmd = tokens[0];
+    const cmdLower = cmd.toLowerCase();
+    const args = tokens.slice(1);
+    if(cmdLower === "bind"){
+      if(args.length >= 2) binds.push([args[0], args.slice(1).join(" ")]);
+      continue;
+    }
+    if(SKIP_CMDS.has(cmdLower)) continue;
+    if(args.length){
+      settings.push([cmd, args.length > 1 ? args.join(" ") : args[0]]);
+    }
+  }
+  return { binds, settings };
+}
+function dedupeSettings(items){
+  const lastVal = {};
+  for(const [name, value] of items) lastVal[name] = value;
+  const seen = new Set();
+  const out = [];
+  for(const [name] of items){
+    if(seen.has(name)) continue;
+    seen.add(name);
+    out.push([name, lastVal[name]]);
+  }
+  return out;
+}
+
+/* ============================================================
+ * VDF 解析
+ * ============================================================ */
+class VDFParser {
+  constructor(text){ this.text = text; this.pos = 0; this.length = text.length; }
+  parse(){
+    const result = {};
+    while(this.pos < this.length){
+      this.skipWs();
+      if(this.pos >= this.length) break;
+      if(this.peek() === '"'){
+        const key = this.readString();
+        this.skipWs();
+        result[key] = this._readValue();
+      } else this.pos++;
+    }
+    return result;
+  }
+  parseBlock(){
+    this.expect("{");
+    const result = {};
+    while(true){
+      this.skipWs();
+      if(this.pos >= this.length) break;
+      if(this.peek() === "}"){ this.pos++; break; }
+      if(this.peek() === '"'){
+        const key = this.readString();
+        this.skipWs();
+        result[key] = this._readValue();
+      } else this.pos++;
+    }
+    return result;
+  }
+  _readValue(){
+    const c = this.peek();
+    if(c === "{") return this.parseBlock();
+    if(c === '"') return this.readString();
+    return this.readToken();
+  }
+  skipWs(){
+    const text = this.text, n = this.length;
+    while(this.pos < n){
+      const c = text[this.pos];
+      if(c===" "||c==="\t"||c==="\r"||c==="\n") this.pos++;
+      else if(c==="/" && this.pos+1 < n && text[this.pos+1]==="/"){
+        const nl = text.indexOf("\n", this.pos);
+        this.pos = nl === -1 ? n : nl;
+      } else break;
+    }
+  }
+  peek(){ return this.pos < this.length ? this.text[this.pos] : ""; }
+  expect(ch){
+    if(this.pos < this.length && this.text[this.pos] === ch) this.pos++;
+    else throw new Error("Expected '"+ch+"' at "+this.pos);
+  }
+  readString(){
+    this.expect('"');
+    const text = this.text, n = this.length;
+    const chars = [];
+    while(this.pos < n){
+      const c = text[this.pos];
+      if(c === "\\"){ this.pos++; if(this.pos < n){ chars.push(text[this.pos]); this.pos++; } }
+      else if(c === '"'){ this.pos++; break; }
+      else { chars.push(c); this.pos++; }
+    }
+    return chars.join("");
+  }
+  readToken(){
+    const start = this.pos, text = this.text, n = this.length;
+    while(this.pos < n && !' \t\r\n{}"'.includes(text[this.pos])) this.pos++;
+    return text.slice(start, this.pos);
+  }
+}
+function findSection(data, name){
+  if(!data || typeof data !== "object") return null;
+  if(data[name] && typeof data[name] === "object") return data[name];
+  for(const v of Object.values(data)){
+    if(v && typeof v === "object"){
+      const res = findSection(v, name);
+      if(res) return res;
+    }
+  }
+  return null;
+}
+function collectLeaves(data, out, prefix=""){
+  if(data && typeof data === "object"){
+    for(const [k, v] of Object.entries(data)){
+      if(v && typeof v === "object") collectLeaves(v, out, prefix+k+".");
+      else out[prefix+k] = v;
+    }
+  } else out[prefix] = data;
+}
+
+/* ============================================================
+ * 文件读取（多编码回退）
+ * ============================================================ */
+async function readTextWithFallback(file){
+  const buf = await file.arrayBuffer();
+  const encodings = ["utf-8","utf-16le","utf-16be","gbk","gb18030","big5","shift_jis","latin1"];
+  for(const enc of encodings){
+    try {
+      const dec = new TextDecoder(enc, { fatal: true });
+      return dec.decode(buf);
+    } catch(_) { /* 换下一个 */ }
+  }
+  return new TextDecoder("utf-8", { fatal: false }).decode(buf);
+}
+
+/* ============================================================
+ * 文件查找
+ * ============================================================ */
+function findFileInList(files, keywords, exts){
+  const kwLower = keywords.map(k=>k.toLowerCase());
+  const extLower = exts.map(e=>e.toLowerCase());
+  let best = null, bestRank = [extLower.length, Infinity];
+  for(const f of files){
+    const nameLower = f.name.toLowerCase();
+    let extRank = -1;
+    for(let i=0;i<extLower.length;i++){ if(nameLower.endsWith(extLower[i])){ extRank = i; break; } }
+    if(extRank < 0) continue;
+    if(!kwLower.every(kw=>nameLower.includes(kw))) continue;
+    const rank = [extRank, f.name.length];
+    if(rank[0] < bestRank[0] || (rank[0] === bestRank[0] && rank[1] < bestRank[1])){
+      bestRank = rank; best = f;
+    }
+  }
+  return best;
+}
+
+/* ============================================================
+ * cvarlist.md 解析（兼容 SuGolYolLom / ArmynC 格式）
+ * 返回 { name: "英文描述" }
+ * ============================================================ */
+function parseCvarlistMarkdown(text){
+  const map = {};
+  for(const rawLine of text.split(/\r?\n/)){
+    const line = rawLine.trim();
+    if(!line || line.startsWith("#") || line.startsWith("Name |")) continue;
+    if(/^\|?[\s\-:|]+\|?$/.test(line)) continue;
+    let parts = line.split("|").map(s=>s.trim());
+    if(parts.length < 3){ parts = line.split("\t").map(s=>s.trim()); }
+    if(parts.length < 3) continue;
+    if(parts[0] === "") parts.shift();
+    if(parts.length && parts[parts.length-1] === "") parts.pop();
+    if(parts.length < 3) continue;
+    const name = parts[0];
+    if(!name) continue;
+    if(name.startsWith("+") || name.startsWith("-")) continue;
+    let desc = parts.slice(2).join(" ").trim();
+    desc = desc.replace(/FCVAR_[\w,|]+/g, "").trim();
+    desc = desc.replace(/^\*\*Default:\*\*\s*\S+\s*/i, "").trim();
+    desc = desc.replace(/^Default:\s*\S+\s*/i, "").trim();
+    desc = desc.replace(/^[-–—\s:]+/, "").trim();
+    if(desc.length > 3 && /[a-zA-Z]/.test(desc)){
+      map[name.toLowerCase()] = desc;
+    }
+  }
+  return map;
+}
+
+/* ============================================================
+ * Steam 扫描
+ * ============================================================ */
+function steamId64ToAccountId(steamid64){
+  try { return (BigInt(steamid64) - 76561197960265728n).toString(); }
+  catch(_) { return ""; }
+}
+function scanSteamUsers(fileMap){
+  const users = new Map();
+  const re = /(?:^|\/)userdata\/([^/]+)\/730\/(?:local\/)?cfg\/([^/]+)$/i;
+  const cfgFiles = [];
+  for(const [, file] of fileMap){
+    const rel = (file.webkitRelativePath || file.name).replace(/\\/g,"/");
+    const m = rel.match(re);
+    if(m) cfgFiles.push({ accountId: m[1], name: m[2], file });
+  }
+  if(cfgFiles.length === 0){
+    for(const [, file] of fileMap){
+      const rel = (file.webkitRelativePath || file.name).replace(/\\/g,"/");
+      const m2 = rel.match(/(?:^|\/)(?:local\/)?cfg\/([^/]+)$/i);
+      if(m2) cfgFiles.push({ accountId: "(unknown)", name: m2[1], file });
+    }
+  }
+  for(const {accountId, name, file} of cfgFiles){
+    if(!users.has(accountId)) users.set(accountId, { account_id: accountId, display: accountId, files: [] });
+    users.get(accountId).files.push({ name, file });
+  }
+  let loginUsersFile = null;
+  for(const [, file] of fileMap){
+    const rel = (file.webkitRelativePath || file.name).replace(/\\/g,"/");
+    if(/\/config\/loginusers\.vdf$/i.test(rel)){ loginUsersFile = file; break; }
+    if(/^config\/loginusers\.vdf$/i.test(rel)){ loginUsersFile = file; break; }
+  }
+  return { users: [...users.values()], loginUsersFile };
+}
+
+/* ============================================================
+ * 数据源加载
+ * ============================================================ */
+const FILE_SPECS = {
+  machine_convars: { keywords: ["machine_convars"], exts: [".vcfg",".txt"] },
+  user_convars:    { keywords: ["user_convars"],    exts: [".vcfg",".txt"] },
+  user_keys:       { keywords: ["user_keys"],       exts: [".vcfg",".txt"] },
+  video:           { keywords: ["video"],           exts: [".txt",".vcfg"] }
+};
+
+function processConvarData(data){
+  let section = null;
+  for(const sec of ["convars","ConVars","convars_localized"]){
+    section = findSection(data, sec);
+    if(section) break;
+  }
+  if(!section){
+    const tmp = {};
+    collectLeaves(data, tmp);
+    section = {};
+    for(const [k, v] of Object.entries(tmp)){
+      const kl = k.toLowerCase();
+      if(!kl.endsWith("name") && !kl.endsWith("version")) section[k] = v;
+    }
+  }
+  return section;
+}
+function processUserKeysData(data){
+  const keyItems = [];
+  let section = null;
+  for(const sec of ["bindings","Bindings","Keys","keys"]){
+    section = findSection(data, sec);
+    if(section) break;
+  }
+  if(section){
+    for(const [k, v] of Object.entries(section)){
+      if(typeof v !== "object") keyItems.push(["按键", k, v]);
+    }
+  }
+  let analog = null;
+  for(const sec of ["analogbindings","AnalogBindings"]){
+    analog = findSection(data, sec);
+    if(analog) break;
+  }
+  if(analog){
+    for(const [k, v] of Object.entries(analog)){
+      if(typeof v !== "object") keyItems.push(["模拟绑定", k, v]);
+    }
+  }
+  return keyItems;
+}
+function processVideoData(data){
+  let inner = data;
+  for(const v of Object.values(data)){
+    if(v && typeof v === "object"){ inner = v; break; }
+  }
+  const tmp = {};
+  collectLeaves(inner, tmp);
+  const out = [];
+  for(const [k, v] of Object.entries(tmp)){
+    if(k.toLowerCase().endsWith("name")) continue;
+    if(typeof v !== "object") out.push([k, v]);
+  }
+  return out;
+}
+
+async function loadCs2ConfigsFromEntries(cfgFiles, sourceDesc){
+  const result = {
+    convar_items: [], key_items: [], video_items: [],
+    raw_texts: {}, found_paths: {}, errors: [],
+    cfg_dir: sourceDesc || "(手动文件)", source_desc: sourceDesc || ""
+  };
+  const fileObjects = cfgFiles.map(x => x.file);
+  for(const [name, spec] of Object.entries(FILE_SPECS)){
+    const file = findFileInList(fileObjects, spec.keywords, spec.exts);
+    if(!file){
+      if(name !== "video") result.errors.push("没找到 *"+spec.keywords[0]+"* 文件（试过 "+spec.exts.join(", ")+"）");
+      continue;
+    }
+    result.found_paths[name] = file.name;
+    try {
+      const text = await readTextWithFallback(file);
+      result.raw_texts[name] = text;
+      const data = new VDFParser(text).parse();
+      if(name === "machine_convars" || name === "user_convars"){
+        const section = processConvarData(data);
+        const source = name === "machine_convars" ? "机器配置" : "用户配置";
+        for(const [k, v] of Object.entries(section)){
+          if(typeof v !== "object") result.convar_items.push([source, k, v]);
+        }
+      } else if(name === "user_keys"){
+        result.key_items.push(...processUserKeysData(data));
+      } else if(name === "video"){
+        result.video_items.push(...processVideoData(data));
+      }
+    } catch(e){
+      result.errors.push("解析 "+file.name+" 时出错："+(e.message || e));
+    }
+  }
+  return result;
+}
+
+/* ============================================================
+ * 视图构建
+ * ============================================================ */
+function makeKey(source, key, value){
+  const key_cn = translateKeyLocal(key) || "";
+  const value_cn = translateCmdLocal(value) || "";
+  return { source, key, key_cn, value, value_cn, trans: (key_cn && value_cn) ? "本地" : "" };
+}
+function makeVideo(key, value){
+  let key_cn = lookupDescCN(key) || translateVideoKeyLocal(key) || "";
+  const value_cn = translateVideoValueLocal(key, value) || "";
+  const desc_en = lookupDescEN(key) || "";
+  return { key, key_cn, value: String(value), value_cn, desc_en, trans: key_cn ? "本地" : "" };
+}
+function buildDiagnosis(src){
+  if(!src) return "还没有载入任何配置";
+  const lines = ["CS2 CFG Viewer v4.1.0", ""];
+  if(src.type === "vcfg"){
+    lines.push("vcfg 数据源");
+    lines.push("  配置目录：" + (src.cfg_dir || ""));
+    if(src.source_desc) lines.push("  来源：" + src.source_desc);
+    lines.push("  文件：");
+    const paths = Object.entries(src.found_paths || {});
+    if(paths.length){ for(const [n, p] of paths) lines.push("    ["+n+"] "+p); }
+    else lines.push("    （没有找到文件）");
+    if(src.errors && src.errors.length){
+      lines.push("  提示：");
+      for(const e of src.errors) lines.push("    - "+e);
+    }
+  } else {
+    lines.push("autoexec 数据源");
+    lines.push("  文件：" + (src.filename || src.path || ""));
+    lines.push("  按键绑定：" + src.binds_count + " 条");
+    lines.push("  设置项：" + src.settings_count + " 条（已去重）");
+  }
+  lines.push("");
+  lines.push("描述库状态：");
+  lines.push("  中文描述（预翻译）：" + Object.keys(CONVAR_DESC_CN).length + " 条");
+  lines.push("  英文描述（增强翻译）：" + Object.keys(CONVAR_DESC_EN).length + " 条");
+  return lines.join("\n");
+}
+function buildView(src){
+  if(!src){
+    return { ok:true, convar:[], keys:[], video:[], raw:[],
+             summary:"还没有载入任何配置", source_type:null,
+             diagnosis:"还没有载入任何配置" };
+  }
+  let convar, keys, video, raw, head;
+  if(src.type === "vcfg"){
+    convar = src.convar.map(x=>x.slice());
+    keys = src.key.map(x=>makeKey(x[0], x[1], x[2]));
+    video = src.video.map(x=>makeVideo(x[0], x[1]));
+    raw = Object.entries(src.raw_texts).map(([name, text])=>({ name, text }));
+    head = "vcfg " + Object.keys(src.found_paths).length + " 个文件";
+  } else {
+    convar = [];
+    keys = src.key.map(x=>makeKey(x[0], x[1], x[2]));
+    video = src.video.map(x=>makeVideo(x[0], x[1]));
+    raw = [{ name: "autoexec ("+src.filename+")", text: src.raw_text }];
+    head = "autoexec " + src.binds_count + " 按键、" + src.settings_count + " 项设置";
+  }
+  const miss_k = keys.filter(it=>!it.key_cn || !it.value_cn).length;
+  const miss_v = video.filter(it=>!it.key_cn).length;
+  const summary = "完成 · " + head + " · " + convar.length + " 配置 · " +
+                  keys.length + " 按键（" + miss_k + " 未收录）· " +
+                  video.length + " 设置（" + miss_v + " 未收录）";
+  return {
+    ok: true, convar, keys, video, raw, summary,
+    source_type: src.type,
+    diagnosis: buildDiagnosis(src)
+  };
+}
+
+/* ============================================================
+ * 应用状态
+ * ============================================================ */
+const state = {
+  fileMap: null,
+  rootLabel: "",
+  users: [],
+  loginUsersFile: null,
+  autoexecFile: null,
+  source: null,
+  view: null,
+  currentTab: "keys",
+  search: "",
+  online: {
+    running: false, cancelled: false, cache: new Map(),
+    done: 0, total: 0,
+    pending: [],
+    threadToken: 0
+  }
+};
+
+/* ============================================================
+ * 渲染
+ * ============================================================ */
+const $ = sel => document.querySelector(sel);
+function showToast(msg, ms=2800){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(()=>t.classList.remove("show"), ms);
+}
+function showOverlay(msg){
+  $("#overlayMsg").textContent = msg || "正在处理…";
+  $("#overlay").classList.add("show");
+}
+function hideOverlay(){ $("#overlay").classList.remove("show"); }
+function escapeHtml(s){
+  return String(s==null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function renderSourceSelect(){
+  const sel = $("#sourceSelect");
+  const prev = sel.value;
+  sel.innerHTML = "";
+  if(!state.users.length && !state.autoexecFile){
+    const opt = document.createElement("option");
+    opt.value = ""; opt.textContent = "— 尚无可用数据源 —";
+    sel.appendChild(opt);
+    return;
+  }
+  state.users.forEach((u, i)=>{
+    const opt = document.createElement("option");
+    opt.value = "user:" + i;
+    opt.textContent = u.display;
+    sel.appendChild(opt);
+  });
+  if(state.autoexecFile){
+    const opt = document.createElement("option");
+    opt.value = "autoexec";
+    opt.textContent = "autoexec (" + state.autoexecFile.name + ")";
+    sel.appendChild(opt);
+  }
+  if(prev && Array.from(sel.options).some(o => o.value === prev)){
+    sel.value = prev;
+  }
+}
+function renderPath(){
+  const el = $("#pathDisplay");
+  if(state.users.length){
+    const sel = $("#sourceSelect");
+    const val = sel ? sel.value : "";
+    let extra = "";
+    if(val && val.startsWith("user:")){
+      const idx = parseInt(val.slice(5), 10);
+      const u = state.users[idx];
+      if(u) extra = " · 当前：" + u.display;
+    } else if(val === "autoexec" && state.autoexecFile){
+      extra = " · 当前：autoexec";
+    }
+    el.textContent = "Steam: " + state.rootLabel + " · " +
+                     state.users.length + " 个账户" + extra;
+    el.classList.remove("placeholder");
+  } else if(state.autoexecFile){
+    el.textContent = "autoexec: " + state.autoexecFile.name;
+    el.classList.remove("placeholder");
+  } else {
+    el.textContent = "选择 Steam 目录，或用 ProSettings 下载解析 autoexec";
+    el.classList.add("placeholder");
+  }
+}
+function renderKeys(){
+  const table = $("#keys-table");
+  const empty = $("#keys-empty");
+  const tbody = table.querySelector("tbody");
+  if(!state.view || !state.view.keys.length){
+    table.style.display = "none";
+    empty.style.display = "flex";
+    empty.textContent = state.view ? "这个数据源没有按键绑定" : "还没有载入任何配置";
+    return;
+  }
+  empty.style.display = "none";
+  table.style.display = "table";
+  const frag = document.createDocumentFragment();
+  const q = state.search.toLowerCase();
+  let count = 0;
+  for(const it of state.view.keys){
+    if(q){
+      const hay = (it.source+" "+it.key+" "+it.key_cn+" "+it.value+" "+it.value_cn).toLowerCase();
+      if(!hay.includes(q)) continue;
+    }
+    count++;
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td><span class="tag">'+escapeHtml(it.source)+'</span></td>' +
+      '<td class="mono">'+escapeHtml(it.key)+'</td>' +
+      '<td>'+(it.key_cn ? escapeHtml(it.key_cn) : '<span class="tag miss">未收录</span>')+'</td>' +
+      '<td class="mono">'+escapeHtml(it.value)+'</td>' +
+      '<td>'+(it.value_cn ? escapeHtml(it.value_cn) : '<span class="tag miss">未收录</span>')+'</td>';
+    frag.appendChild(tr);
+  }
+  tbody.innerHTML = "";
+  if(count === 0){
+    const tr = document.createElement("tr");
+    tr.innerHTML = '<td colspan="5" style="text-align:center;color:#9aa0ad;padding:30px;">无匹配结果</td>';
+    tbody.appendChild(tr);
+  } else {
+    tbody.appendChild(frag);
+  }
+}
+function renderVideo(){
+  const table = $("#video-table");
+  const empty = $("#video-empty");
+  const tbody = table.querySelector("tbody");
+  if(!state.view || !state.view.video.length){
+    table.style.display = "none";
+    empty.style.display = "flex";
+    empty.textContent = state.view ? "这个数据源没有设置项" : "还没有载入任何配置";
+    return;
+  }
+  empty.style.display = "none";
+  table.style.display = "table";
+  const frag = document.createDocumentFragment();
+  const q = state.search.toLowerCase();
+  let count = 0;
+  for(const it of state.view.video){
+    if(q){
+      const hay = (it.key+" "+it.key_cn+" "+it.value+" "+it.value_cn+" "+(it.desc_en||"")).toLowerCase();
+      if(!hay.includes(q)) continue;
+    }
+    count++;
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td class="mono">'+escapeHtml(it.key)+'</td>' +
+      '<td>'+(it.key_cn ? escapeHtml(it.key_cn) : '<span class="tag miss">未收录</span>')+'</td>' +
+      '<td class="mono">'+escapeHtml(it.value)+'</td>' +
+      '<td>'+(it.value_cn ? escapeHtml(it.value_cn) : "")+'</td>' +
+      '<td style="font-size:11.5px;color:#7a7f8c;">'+escapeHtml(it.desc_en||"")+'</td>';
+    frag.appendChild(tr);
+  }
+  tbody.innerHTML = "";
+  if(count === 0){
+    const tr = document.createElement("tr");
+    tr.innerHTML = '<td colspan="5" style="text-align:center;color:#9aa0ad;padding:30px;">无匹配结果</td>';
+    tbody.appendChild(tr);
+  } else {
+    tbody.appendChild(frag);
+  }
+}
+function renderRaw(){
+  const el = $("#rawContent");
+  if(!state.view || !state.view.raw.length){
+    el.className = "empty";
+    el.textContent = "还没有载入任何配置";
+    return;
+  }
+  el.className = "";
+  el.innerHTML = "";
+  for(const r of state.view.raw){
+    const div = document.createElement("div");
+    div.className = "raw-block";
+    const h = document.createElement("h4");
+    h.textContent = r.name;
+    const pre = document.createElement("pre");
+    pre.textContent = r.text;
+    div.appendChild(h); div.appendChild(pre);
+    el.appendChild(div);
+  }
+}
+function renderDiagnosis(){
+  $("#diagContent").textContent =
+    (state.view && state.view.diagnosis) ? state.view.diagnosis : "还没有载入任何配置";
+}
+function updateSummary(){
+  $("#summary").textContent =
+    (state.view && state.view.summary) ? state.view.summary : "还没有载入任何配置";
+}
+function renderAll(){
+  renderSourceSelect();
+  renderPath();
+  renderKeys();
+  renderVideo();
+  renderRaw();
+  renderDiagnosis();
+  updateSummary();
+}
+
+/* ============================================================
+ * 数据源加载
+ * ============================================================ */
+async function applyVcfgSource(cfgFiles, sourceDesc){
+  const result = await loadCs2ConfigsFromEntries(cfgFiles, sourceDesc);
+  state.source = {
+    type: "vcfg",
+    convar: result.convar_items.map(x=>x.slice()),
+    key: result.key_items.map(x=>x.slice()),
+    video: result.video_items.map(x=>x.slice()),
+    raw_texts: { ...result.raw_texts },
+    found_paths: { ...result.found_paths },
+    errors: result.errors.slice(),
+    cfg_dir: result.cfg_dir,
+    source_desc: sourceDesc
+  };
+  state.view = buildView(state.source);
+  renderAll();
+}
+async function loadSelectedSource(){
+  const val = $("#sourceSelect").value;
+  if(!val){ showToast("请先选择 Steam 目录或导入 autoexec"); return; }
+  if(val === "autoexec"){
+    if(!state.autoexecFile){ showToast("还没有导入 autoexec"); return; }
+    try {
+      const text = await readTextWithFallback(state.autoexecFile);
+      const parsed = parseAutoexecCfg(text);
+      const binds = parsed.binds;
+      const settings = dedupeSettings(parsed.settings);
+      state.source = {
+        type: "autoexec",
+        key: binds.map(x=>["按键", x[0], x[1]]),
+        video: settings.map(x=>[x[0], x[1]]),
+        raw_text: text,
+        filename: state.autoexecFile.name,
+        binds_count: binds.length,
+        settings_count: settings.length
+      };
+      state.view = buildView(state.source);
+      renderAll();
+      showToast("已载入 autoexec：" + binds.length + " 按键 / " + settings.length + " 设置");
+    } catch(e){ showToast("读取 autoexec 失败：" + (e.message || e)); }
+    return;
+  }
+  if(val.startsWith("user:")){
+    const idx = parseInt(val.slice(5), 10);
+    const user = state.users[idx];
+    if(!user){ showToast("账户索引无效"); return; }
+    showOverlay("正在解析账户 " + user.account_id + " …");
+    try {
+      await applyVcfgSource(user.files, "账户 " + user.account_id);
+      hideOverlay();
+      showToast("已载入账户 " + user.account_id);
+    } catch(e){
+      hideOverlay();
+      showToast("加载失败：" + (e.message || e));
+    }
+  }
+}
+
+/* ============================================================
+ * 目录 / 文件选择
+ * ============================================================ */
+function handleDirFiles(fileList){
+  const files = Array.from(fileList || []);
+  if(!files.length){ showToast("没有选择任何文件"); return; }
+  if(files.length > 100000){
+    showToast("目录文件过多（"+files.length+" 个），建议直接选择 userdata 目录", 4000);
+  }
+  showOverlay("正在扫描 " + files.length + " 个文件…");
+  const map = new Map();
+  for(const f of files){
+    const rel = (f.webkitRelativePath || f.name).replace(/\\/g,"/");
+    map.set(rel.toLowerCase(), f);
+  }
+  state.fileMap = map;
+  const first = (files[0].webkitRelativePath || files[0].name).replace(/\\/g,"/").split("/")[0];
+  state.rootLabel = first || "";
+
+  setTimeout(()=>{
+    try {
+      const { users, loginUsersFile } = scanSteamUsers(map);
+      state.users = users;
+      state.loginUsersFile = loginUsersFile;
+      const finishAndLoad = ()=>{
+        renderAll();
+        if(state.users.length){
+          $("#sourceSelect").value = "user:0";
+          loadSelectedSource().finally(hideOverlay);
+        } else {
+          showToast("没有找到 Steam 账户（userdata/<id>/730/local/cfg）", 4000);
+          hideOverlay();
+        }
+      };
+      if(loginUsersFile && users.length){
+        readTextWithFallback(loginUsersFile).then(text=>{
+          try {
+            const data = new VDFParser(text).parse();
+            const usersData = findSection(data, "users");
+            if(usersData && typeof usersData === "object"){
+              for(const [steamid64, info] of Object.entries(usersData)){
+                if(!info || typeof info !== "object") continue;
+                const accountId = steamId64ToAccountId(steamid64);
+                const persona = info.PersonaName || "";
+                const account = info.AccountName || "";
+                for(const u of users){
+                  if(u.account_id === accountId && (persona || account)){
+                    u.display = persona + " (" + account + ") [" + accountId + "]";
+                  }
+                }
+              }
+            }
+          } catch(_) {}
+          finishAndLoad();
+        }).catch(finishAndLoad);
+      } else {
+        finishAndLoad();
+      }
+    } catch(e){
+      showToast("扫描失败：" + (e.message || e), 4000);
+      hideOverlay();
+    }
+  }, 30);
+}
+function handleManualFiles(fileList){
+  const files = Array.from(fileList || []);
+  if(!files.length) return;
+  showOverlay("正在解析手动选择的文件…");
+  setTimeout(async ()=>{
+    try {
+      const entries = files.map(f=>({ name: f.name, file: f }));
+      await applyVcfgSource(entries, "手动文件（" + files.length + " 个）");
+      state.users = [];
+      renderPath();
+      const sel = $("#sourceSelect");
+      sel.innerHTML = '<option value="">— 已加载手动文件 —</option>';
+      showToast("已载入 " + files.length + " 个文件");
+    } catch(e){
+      showToast("解析失败：" + (e.message || e), 4000);
+    } finally {
+      hideOverlay();
+    }
+  }, 30);
+}
+function handleAutoexecFile(file){
+  if(!file) return;
+  state.autoexecFile = file;
+  renderSourceSelect();
+  renderPath();
+  $("#sourceSelect").value = "autoexec";
+  loadSelectedSource();
+}
+
+/* ============================================================
+ * 联网翻译（描述增强）
+ * ============================================================ */
+const MYMEMORY_API = "https://api.mymemory.translated.net/get";
+async function translateOne(text, token, context){
+  if(!text) return null;
+  let query;
+  if(context){
+    query = context + " (" + text.replace(/^[+-]+/, "") + ")";
+  } else {
+    query = text.trim().replace(/^[+-]+/, "").trim();
+  }
+  if(!query) return null;
+  const cacheKey = query;
+  if(state.online.cache.has(cacheKey)) return state.online.cache.get(cacheKey);
+  try {
+    const url = MYMEMORY_API + "?q=" + encodeURIComponent(query)
+              + "&langpair=en%7Czh-CN";
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 6000);
+    const resp = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(t);
+    if(!resp.ok) return null;
+    const data = await resp.json();
+    if(token !== state.online.threadToken || state.online.cancelled) return null;
+    let result = data && data.responseData && data.responseData.translatedText;
+    if(!result || String(result).startsWith("MYMEMORY WARNING")) return null;
+    if(context){
+      result = String(result).replace(/\s*[（(][^（）()]*[）)]\s*$/, "").trim();
+    }
+    if(result){
+      state.online.cache.set(cacheKey, result);
+      return result;
+    }
+  } catch(_){ /* 网络失败 */ }
+  return null;
+}
+function collectPending(){
+  const src = state.source;
+  if(!src) return [];
+  const pending = [];
+  for(let i=0;i<src.key.length;i++){
+    const [, k, v] = src.key[i];
+    if(!translateKeyLocal(k))
+      pending.push({ kind:"key", idx:i, field:"key_cn", text:k, context:null });
+    if(!translateCmdLocal(v)){
+      const vStr = String(v || "");
+      const baseCmd = vStr.trim().split(/\s+/)[0].toLowerCase();
+      const desc = CONVAR_DESC_EN[baseCmd] || CONVAR_DESC_EN[vStr.toLowerCase()] || null;
+      pending.push({ kind:"key", idx:i, field:"value_cn", text:v, context:desc });
+    }
+  }
+  for(let i=0;i<src.video.length;i++){
+    const [k] = src.video[i];
+    if(lookupDescCN(k)) continue;
+    if(!translateVideoKeyLocal(k)){
+      const desc = lookupDescEN(k);
+      pending.push({
+        kind:"video", idx:i, field:"key_cn",
+        text: cleanVideoKeyForTranslation(k),
+        context: desc
+      });
+    }
+  }
+  return pending;
+}
+async function startOnline(){
+  if(!state.source){ showToast("还没有载入任何配置"); return; }
+  if(state.online.running){ showToast("已经在运行"); return; }
+  const pending = collectPending();
+  if(!pending.length){
+    showToast("本地字典/描述库已全部收录，无需联网翻译");
+    $("#onlineProgress").textContent = "0/0";
+    return;
+  }
+  state.online.running = true;
+  state.online.cancelled = false;
+  state.online.done = 0;
+  state.online.total = pending.length;
+  state.online.pending = pending;
+  state.online.threadToken++;
+  const myToken = state.online.threadToken;
+  $("#btnStartOnline").disabled = true;
+  $("#btnStopOnline").disabled = false;
+  $("#onlineProgress").textContent = "0/" + state.online.total;
+  for(let i=0;i<pending.length;i++){
+    if(state.online.cancelled || myToken !== state.online.threadToken){
+      state.online.running = false;
+      $("#btnStartOnline").disabled = false;
+      $("#btnStopOnline").disabled = true;
+      return;
+    }
+    const item = pending[i];
+    const result = await translateOne(item.text, myToken, item.context);
+    if(state.online.cancelled || myToken !== state.online.threadToken){
+      state.online.running = false;
+      $("#btnStartOnline").disabled = false;
+      $("#btnStopOnline").disabled = true;
+      return;
+    }
+    if(result){
+      if(item.kind === "key"){
+        const row = state.source.key[item.idx];
+        if(item.field === "key_cn") row[2] = result;
+        else row[3] = result;
+      } else {
+        state.source.video[item.idx][2] = result;
+      }
+      state.view = buildView(state.source);
+      if(item.kind === "key") renderKeys();
+      else renderVideo();
+      updateSummary();
+    }
+    state.online.done++;
+    $("#onlineProgress").textContent = state.online.done + "/" + state.online.total;
+  }
+  state.online.running = false;
+  $("#btnStartOnline").disabled = false;
+  $("#btnStopOnline").disabled = true;
+  showToast("联网翻译完成：" + state.online.done + "/" + state.online.total);
+}
+function stopOnline(){
+  if(!state.online.running) return;
+  state.online.cancelled = true;
+  state.online.threadToken++;
+  state.online.running = false;
+  $("#btnStartOnline").disabled = false;
+  $("#btnStopOnline").disabled = true;
+  showToast("已停止联网翻译");
+}
+
+/* ============================================================
+ * cvarlist.md 导入
+ * ============================================================ */
+async function importCvarlist(file){
+  if(!file) return;
+  showOverlay("正在解析 cvarlist.md…");
+  try {
+    const text = await readTextWithFallback(file);
+    const extra = parseCvarlistMarkdown(text);
+    let count = 0;
+    for(const [k, v] of Object.entries(extra)){
+      if(!CONVAR_DESC_EN[k]){ CONVAR_DESC_EN[k] = v; count++; }
+    }
+    showToast("已导入 " + count + " 条英文描述（总计 " +
+              Object.keys(CONVAR_DESC_EN).length + " 条）");
+    if(state.source){
+      state.view = buildView(state.source);
+      renderAll();
+    }
+  } catch(e){
+    showToast("导入失败：" + (e.message || e), 4000);
+  } finally {
+    hideOverlay();
+  }
+}
+
+/* ============================================================
+ * 事件绑定
+ * ============================================================ */
+function bindEvents(){
+  $("#btnPickDir").addEventListener("click", ()=>{
+    $("#dirInput").value = "";
+    $("#dirInput").click();
+  });
+  $("#dirInput").addEventListener("change", e=>{
+    handleDirFiles(e.target.files);
+  });
+  $("#btnPickFiles").addEventListener("click", ()=>{
+    $("#filesInput").value = "";
+    $("#filesInput").click();
+  });
+  $("#filesInput").addEventListener("change", e=>{
+    handleManualFiles(e.target.files);
+  });
+  $("#btnImportAutoexec").addEventListener("click", ()=>{
+    $("#autoexecInput").value = "";
+    $("#autoexecInput").click();
+  });
+  $("#autoexecInput").addEventListener("change", e=>{
+    const f = e.target.files && e.target.files[0];
+    if(f) handleAutoexecFile(f);
+  });
+  $("#btnImportCvarlist").addEventListener("click", ()=>{
+    $("#cvarlistInput").value = "";
+    $("#cvarlistInput").click();
+  });
+  $("#cvarlistInput").addEventListener("change", e=>{
+    const f = e.target.files && e.target.files[0];
+    if(f) importCvarlist(f);
+  });
+  $("#btnReload").addEventListener("click", ()=>{
+    loadSelectedSource();
+  });
+  $("#sourceSelect").addEventListener("change", ()=>{
+    loadSelectedSource();
+  });
+  $("#search").addEventListener("input", e=>{
+    state.search = e.target.value.trim();
+    renderKeys();
+    renderVideo();
+  });
+  document.querySelectorAll(".tabs button[data-tab]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".tabs button[data-tab]").forEach(b=>b.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+      btn.classList.add("active");
+      state.currentTab = btn.dataset.tab;
+      $("#tab-" + state.currentTab).classList.add("active");
+    });
+  });
+  $("#btnStartOnline").addEventListener("click", startOnline);
+  $("#btnStopOnline").addEventListener("click", stopOnline);
+}
+
+/* ============================================================
+ * 启动
+ * ============================================================ */
+bindEvents();
+renderAll();
+</script>
+</body>
+</html>
