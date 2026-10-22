@@ -31,23 +31,22 @@ CS2 的配置以纯文本形式存放在以下位置：
 
 仓库包含三个独立版本，功能相似，部署方式不同：
 
-| 版本 | 位置 | 技术栈 | 适合谁 |
-|---|---|---|---|
-| **网页新版**（推荐） | `网页新版New Web Version/` | 单文件 HTML | 零安装、双击即用、跨平台 |
-| **WebUI 焕新版** | `WebUI焕新版WebUI New Look/` | PyWebView | 想要桌面窗口和系统文件对话框 |
-| **原生 UI 版本** | `原生UI版本Native UI version/` | Tkinter | 只有 Python、不想装第三方依赖 |
+| 版本 | 位置 | 适合谁 |
+|---|---|---|
+| **网页新版**（推荐） | `网页新版New Web Version/` | 零安装、双击即用、跨平台 |
+| **WebUI 焕新版** | `WebUI焕新版WebUI New Look/` | 想要桌面窗口和系统文件对话框 |
+| **原生 UI 版本** | `原生UI版本Native UI version/` | 只有 Python、不想装第三方依赖 |
 
 ### 版本对比
 
 | 特性 | 网页新版 v4.1.0 | WebUI 焕新版 | 原生 UI 版本 |
 |---|---|---|---|
 | 安装步骤 | 双击 HTML | 需装 pywebview | 需装 Python |
-| Steam 路径自动探测 | ❌ 手动选择 | ✅ 注册表读取 | ✅ 注册表读取 |
-| 多编码回退 | ✅ | ✅ | ✅ |
+| Steam 路径自动探测 | ❌ 手动选择 | ✅ | ✅ |
 | 官方描述增强翻译 | ✅ | ❌ | ❌ |
 | cvarlist.md 导入 | ✅ | ❌ | ❌ |
 | 液态玻璃 UI | ✅ | ✅ | ❌ |
-| 联网翻译 | ✅ MyMemory | ✅ MyMemory | ✅ MyMemory |
+| 联网翻译 | ✅ | ✅ | ✅ |
 
 ---
 
@@ -72,7 +71,7 @@ CS2-CFG-view/
 
 ## ⚡ 快速开始
 
-### 网页新版（推荐）
+### 网页新版（推荐）跟随CS2最新版本更新
 
 1. 下载 `网页新版New Web Version/cs2cfgviewer.html`
 2. 用 Chrome / Edge 双击打开
@@ -100,9 +99,9 @@ python "原生UI版本Native UI version/cs2_cfg_viewer.py"
 
 三个版本共享同一套翻译逻辑：
 
-1. **本地字典**：内置 `KEY_NAME_CN`、`CMD_NAME_CN`、`VIDEO_NAME_CN`、`VIDEO_VALUE_CN` 四本字典，覆盖常用按键、命令、设置项。
+1. **本地字典**：内置常用按键、命令、设置项的中英对照。
 2. **联网翻译**：本地未命中的条目，调用 [MyMemory Translation API](https://mymemory.translated.net/) 英译中。
-3. **描述增强**（仅网页新版 v4.1.0+）：调用官方 ConVar 英文描述作为翻译上下文，显著提升机翻准确度。
+3. **描述增强**（仅网页新版）：调用官方 ConVar 英文描述作为翻译上下文，显著提升机翻准确度。
 
 ---
 
@@ -119,9 +118,9 @@ python "原生UI版本Native UI version/cs2_cfg_viewer.py"
 
 ## ⚠️ 已知限制
 
-- **Steam 路径自动探测**：仅 WebUI 焕新版和原生 UI 版本支持（Python 可读注册表）；网页新版需手动选择目录。
-- **MyMemory 免费额度**：匿名用户约 5000 字符/天，超出后请求返回 `MYMEMORY WARNING`，代码会静默跳过。
-- **Firefox 目录选择**：Firefox 不支持 `webkitdirectory`，网页新版用户请改用「手动加载配置文件」或换用 Chrome / Edge。
+- **Steam 路径自动探测**：仅 WebUI 焕新版和原生 UI 版本支持；网页新版需手动选择目录。
+- **MyMemory 免费额度**：匿名用户约 5000 字符/天，超出后请求会被跳过。
+- **Firefox 目录选择**：Firefox 不支持目录选择功能，网页新版请改用「手动加载配置文件」或换用 Chrome / Edge。
 
 ---
 
